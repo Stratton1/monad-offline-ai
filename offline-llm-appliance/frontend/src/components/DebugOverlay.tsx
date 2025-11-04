@@ -15,6 +15,9 @@ interface DebugOverlayProps {
   currentStage: string;
   configSummary: string;
   backendStatus?: 'connected' | 'retrying' | 'down' | 'unknown';
+  backendPath?: string;
+  spawnAttempts?: number;
+  lastHealthCheck?: string;
 }
 
 export default function DebugOverlay({ 
@@ -23,7 +26,10 @@ export default function DebugOverlay({
   configChecked, 
   currentStage, 
   configSummary: _configSummary, // Unused but kept for API compatibility
-  backendStatus = 'unknown'
+  backendStatus = 'unknown',
+  backendPath,
+  spawnAttempts = 0,
+  lastHealthCheck
 }: DebugOverlayProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [diagnostics, setDiagnostics] = useState(getBootDiagnostics());
@@ -96,6 +102,21 @@ export default function DebugOverlay({
       <div>configChecked: {configChecked ? '✅' : '❌'}</div>
       <div>stage: {currentStage}</div>
       <div>backend: {backendStatus === 'connected' ? '🟢' : backendStatus === 'retrying' ? '🟡' : '🔴'} {backendStatus}</div>
+      {backendPath && (
+        <div style={{ fontSize: '9px', color: '#888', wordBreak: 'break-all' }}>
+          path: {backendPath.length > 30 ? backendPath.substring(0, 30) + '...' : backendPath}
+        </div>
+      )}
+      {spawnAttempts > 0 && (
+        <div style={{ fontSize: '9px', color: '#888' }}>
+          attempts: {spawnAttempts}/3
+        </div>
+      )}
+      {lastHealthCheck && (
+        <div style={{ fontSize: '9px', color: '#888' }}>
+          health: {lastHealthCheck}
+        </div>
+      )}
       <div>csp: {diagnostics.cspMode}</div>
       <div>assetBase: {diagnostics.assetBase}</div>
       {diagnostics.lastError && (
@@ -103,6 +124,42 @@ export default function DebugOverlay({
           error: {diagnostics.lastError.substring(0, 40)}...
         </div>
       )}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          const logs = [
+            `bootDone: ${bootDone}`,
+            `setupDone: ${setupDone}`,
+            `configChecked: ${configChecked}`,
+            `stage: ${currentStage}`,
+            `backend: ${backendStatus}`,
+            backendPath ? `path: ${backendPath}` : '',
+            spawnAttempts > 0 ? `attempts: ${spawnAttempts}/3` : '',
+            lastHealthCheck ? `health: ${lastHealthCheck}` : '',
+            `csp: ${diagnostics.cspMode}`,
+            `assetBase: ${diagnostics.assetBase}`,
+            diagnostics.lastError ? `error: ${diagnostics.lastError}` : '',
+            `time: ${new Date().toISOString()}`,
+          ].filter(Boolean).join('\n');
+          navigator.clipboard.writeText(logs).then(() => {
+            alert('Logs copied to clipboard!');
+          }).catch(() => {
+            alert('Failed to copy logs');
+          });
+        }}
+        style={{
+          marginTop: '0.5rem',
+          padding: '0.25rem 0.5rem',
+          background: '#333',
+          color: '#00ff00',
+          border: '1px solid #555',
+          borderRadius: '2px',
+          cursor: 'pointer',
+          fontSize: '9px',
+        }}
+      >
+        Copy Logs
+      </button>
       <div style={{ fontSize: '9px', color: '#888', marginTop: '0.5rem' }}>
         {new Date().toLocaleTimeString()}
       </div>

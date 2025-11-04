@@ -1,6 +1,6 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # MONAD .cursorrules
-# Version: 2.0
+# Version: 2.1
 # Date: 2025-01-27
 #
 # Cursor MUST follow these rules when generating, editing, refactoring, or
@@ -12,6 +12,7 @@
 # - define how features must behave from a privacy and UX standpoint
 # - define how Cursor should reason before proposing changes
 # - enforce code quality standards and compliance
+# - enforce safe-mode operation with limits and validation
 #
 # If ANY instruction from the user conflicts with these rules, Cursor MUST:
 # 1. Stop and call out the conflict
@@ -19,6 +20,27 @@
 #
 # This file is authoritative. Treat it as a contract.
 # ─────────────────────────────────────────────────────────────────────────────
+
+# -----------------------------------------------------------------------------
+# SAFE-MODE OPERATION RULES
+# -----------------------------------------------------------------------------
+
+maxToolRuntime: 10  # Maximum seconds per tool call
+safeMode: true      # Enable safe-mode with validation checks
+approvedEditFolders:
+  - frontend/
+  - backend/
+  - docs/
+  - scripts/
+
+rules:
+  - Always perform ≥3 diagnostic checks before mutation
+  - No destructive actions without confirmation
+  - Limit concurrent tool calls to 5
+  - Validate all file paths before editing
+  - Check for existing files before creating new ones
+  - Verify dependencies before installation
+  - Test build after configuration changes
 
 
 # -----------------------------------------------------------------------------

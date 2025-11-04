@@ -1,6 +1,8 @@
-# MONAD v3 - Secure Offline AI Platform
+# MONAD v1.0.0 — Secure Offline AI Platform
 
-> **A production-grade, secure, personalized offline AI assistant that feels like an intelligent operating system.**
+> **"Untethered Intelligence"** — A production-grade, secure, personalized offline AI assistant that feels like an intelligent operating system.
+
+**Quick Links:** [User Guide](docs/USER_GUIDE.md) · [QA Status](docs/QA_STATUS.md) · [Project Structure](docs/PROJECT_STRUCTURE.md) · [Release Notes](docs/RELEASE_NOTES.md)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -9,13 +11,14 @@
 
 ## 🎯 Overview
 
-MONAD v3 is a cinematic, emotionally adaptive offline AI platform that transforms your computer into an intelligent operating system. It remembers you, respects your privacy, and works entirely offline while providing enterprise-grade features and a premium user experience.
+MONAD v1.0.0 is a production-grade, secure, personalized offline AI platform that transforms your computer into an intelligent operating system. It remembers you, respects your privacy, and works entirely offline while providing enterprise-grade features and a premium user experience.
+
+**Brand Promise:** "0 bytes leave your device. No subscription. Works on a plane, in a cabin, in an air-gapped lab. Yours. Not rented."
 
 ## ✨ Key Features
 
 ### 🎬 **Cinematic Experience**
 - **3D Boot Sequence** - Animated Three.js logo with progress tracking
-- **Emotional Calibration** - AI adapts to your mood and energy level
 - **Smooth Animations** - Framer Motion powered transitions throughout
 - **Premium UI** - Glass morphism, gradients, and professional polish
 
@@ -27,7 +30,6 @@ MONAD v3 is a cinematic, emotionally adaptive offline AI platform that transform
 
 ### 🧠 **Intelligent Features**
 - **Personalized Greetings** - "Hello, Joseph" and "Welcome back"
-- **Emotional Intelligence** - AI adapts to your emotional state
 - **Context Awareness** - File uploads integrate into AI reasoning
 - **Interest Tracking** - Dynamic tagging for personalized responses
 
@@ -52,10 +54,17 @@ MONAD v3 is a cinematic, emotionally adaptive offline AI platform that transform
 
 ## 🚀 Quick Start
 
+### TL;DR
+```bash
+cd offline-llm-appliance/frontend
+npm install && npm run build && npm run tauri:build
+```
+
 ### Prerequisites
 - Node.js 18+ and npm
 - Python 3.11+
 - 4GB+ RAM (for AI models)
+- Rust (for Tauri desktop builds)
 
 ### Installation
 
@@ -85,7 +94,7 @@ MONAD v3 is a cinematic, emotionally adaptive offline AI platform that transform
    python download_phi3.py
    ```
 
-5. **Start the Services**
+5. **Start the Services (Development)**
    ```bash
    # Terminal 1 - Backend
    cd offline-llm-appliance/backend
@@ -97,10 +106,28 @@ MONAD v3 is a cinematic, emotionally adaptive offline AI platform that transform
    npm run dev
    ```
 
-6. **Open MONAD**
-   - Navigate to http://localhost:1420
-   - Complete the cinematic setup wizard
+6. **Build Desktop App (Production)**
+   ```bash
+   cd offline-llm-appliance/frontend
+   npm run build
+   npm run tauri:build
+   # Output: src-tauri/target/release/bundle/macos/MONAD.app
+   ```
+
+7. **Open MONAD**
+   - Development: Navigate to http://localhost:1420
+   - Production: Launch the built .app/.dmg/.msi/.deb
+   - **Backend auto-launch**: The Python FastAPI backend automatically spawns on app launch
+   - Complete the setup wizard
    - Start chatting with your AI assistant!
+
+### Running the Application
+
+The desktop app automatically:
+- ✅ Launches the Python backend on startup
+- ✅ Bundles all required resources (frontend + backend)
+- ✅ Works fully offline (no internet required)
+- ✅ Provides diagnostic logs via Cmd+Shift+D (Debug Overlay)
 
 ## 🏗️ Architecture
 

@@ -15,6 +15,8 @@ This report documents the verification of MONAD v1.0.0 production builds. **macO
 
 - **macOS DMG:** ✅ Complete
 - **macOS App:** ✅ Complete
+- **Backend Bundling:** ✅ Complete (bundled in `Resources/_up_/_up_/backend`)
+- **Backend Auto-Spawn:** ✅ Verified (spawns on app launch)
 - **Windows MSI:** ⚠️ Requires Windows build environment or cross-compilation
 - **Linux DEB:** ⚠️ Requires Linux build environment or cross-compilation
 
@@ -22,6 +24,8 @@ This report documents the verification of MONAD v1.0.0 production builds. **macO
 
 - **Checksums:** ✅ Generated
 - **Bundle Integrity:** ✅ Verified
+- **Backend Bundling:** ✅ Verified (all Python files bundled)
+- **Backend Spawn:** ✅ Verified (auto-launches on app start)
 - **Code Signing:** ⚠️ Not signed (optional)
 - **Smoke Tests:** [PENDING]
 

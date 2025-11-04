@@ -1,10 +1,35 @@
 #!/bin/bash
 # MONAD Project Cleanup Script
 # Removes redundant files and directories to reduce project size
+# Version: 1.0.0
+# Last Updated: 2025-01-27
 
 echo "🧹 MONAD Project Cleanup Script"
 echo "================================"
 echo ""
+echo "⚠️  This script will remove:"
+echo "   - Build artifacts (~200MB)"
+echo "   - Node modules (~300MB)"
+echo "   - Python cache (~10MB)"
+echo "   - Virtual environment (~100MB)"
+echo "   - Old desktop directory (~50MB)"
+echo ""
+echo "📊 Estimated space saved: ~660MB"
+echo ""
+
+read -p "Proceed with cleanup? (y/N): " choice
+case "$choice" in
+  y|Y|yes|Yes|YES)
+    echo ""
+    echo "✅ Proceeding with cleanup..."
+    echo ""
+    ;;
+  *)
+    echo ""
+    echo "❌ Cleanup cancelled."
+    exit 0
+    ;;
+esac
 
 # Function to safely remove directory
 safe_remove() {
@@ -72,7 +97,10 @@ safe_remove_file "INVESTMENT DOCS/MONAD_Executive_Summary.docx"
 echo ""
 echo "🎉 Cleanup complete!"
 echo ""
-echo "📊 Estimated space saved: ~660MB"
+echo "📊 Summary:"
+echo "   ✅ Freed ~660MB of disk space"
+echo "   ✅ Removed build artifacts"
+echo "   ✅ Removed dependencies (can be reinstalled)"
 echo ""
 echo "🔄 To restore dependencies:"
 echo "   Frontend: cd offline-llm-appliance/frontend && npm install"

@@ -10,74 +10,97 @@ use tauri::{Manager, Window, WindowEvent};
 
 mod commands;
 
-fn launch_backend(_app: &tauri::App) {
+fn launch_backend(app: &tauri::App) {
+    use std::time::Duration;
     
     // Try to find backend in bundled resources
     // Tauri v2: Resources are in app bundle's Resources folder
-    let backend_dir = {
-        // Check bundled location first (relative to app bundle)
-        let exe_path = std::env::current_exe()
-            .ok()
-            .and_then(|p| p.parent().map(|p| p.to_path_buf()));
+    let candidates = {
+        let mut paths = Vec::new();
         
-        if let Some(exe_dir) = exe_path {
-            // App bundle structure: MONAD.app/Contents/MacOS/monad
-            // Resources are at: MONAD.app/Contents/Resources/backend
-            let bundled_backend = exe_dir
-                .parent() // Contents
-                .and_then(|p| p.parent()) // MONAD.app
-                .map(|p| p.join("Contents/Resources/backend"));
-            
-            if let Some(ref bundled) = bundled_backend {
-                if bundled.exists() {
-                    println!("✅ Found bundled backend at: {:?}", bundled);
-                    bundled.clone()
-                } else {
-                    println!("⚠️ Bundled backend not found at {:?}, trying dev path", bundled);
-                    PathBuf::from("../../backend")
+        // 1. Check bundled location using Tauri resource_dir API
+        // This will be Contents/Resources/backend in the app bundle
+        if let Ok(resource_dir) = app.path().resource_dir() {
+            let bundled_backend = resource_dir.join("backend");
+            paths.push(bundled_backend);
+            // Tauri converts ../ to _up_/, so check for _up_/_up_/backend path
+            let bundled_backend_alt = resource_dir.join("_up_/_up_/backend");
+            paths.push(bundled_backend_alt);
+        }
+        
+        // 2. Fallback: Check bundled location (Resources folder) via path manipulation
+        if let Some(exe_path) = std::env::current_exe().ok() {
+            if let Some(exe_dir) = exe_path.parent() {
+                // App bundle structure: MONAD.app/Contents/MacOS/monad
+                // Resources are at: MONAD.app/Contents/Resources/backend
+                if let Some(bundle) = exe_dir.parent().and_then(|p| p.parent()) {
+                    let bundled_backend = bundle.join("Contents/Resources/backend");
+                    paths.push(bundled_backend);
+                    // Tauri converts ../ to _up_/, so check for _up_/_up_/backend path
+                    let bundled_backend_alt = bundle.join("Contents/Resources/_up_/_up_/backend");
+                    paths.push(bundled_backend_alt);
                 }
+            }
+        }
+        
+        // 3. Check dev path (relative to src-tauri)
+        paths.push(PathBuf::from("../../backend"));
+        
+        // 4. Check current working directory
+        if let Ok(cwd) = std::env::current_dir() {
+            paths.push(cwd.join("backend"));
+            paths.push(cwd.join("../backend"));
+        }
+        
+        paths
+    };
+    
+    println!("🧩 BOOT_DIAG: Checking backend candidates...");
+    for (i, candidate) in candidates.iter().enumerate() {
+        println!("  [{}] Checking: {:?}", i + 1, candidate);
+        if candidate.exists() {
+            let main_py = candidate.join("main.py");
+            if main_py.exists() {
+                println!("✅ RESOLVED_BACKEND_PATH={:?}", candidate);
+                
+                // Retry logic with exponential backoff
+                let mut last_error = None;
+                for attempt in 1..=3 {
+                    match Command::new("python3")
+                        .arg("main.py")
+                        .current_dir(candidate)
+                        .stdout(Stdio::null())
+                        .stderr(Stdio::null())
+                        .spawn()
+                    {
+                        Ok(_) => {
+                            println!("✅ SPAWN_OK attempt={} path={:?}", attempt, candidate);
+                            return;
+                        }
+                        Err(e) => {
+                            last_error = Some(e);
+                            if attempt < 3 {
+                                let delay_ms = 500 * attempt;
+                                println!("⚠️ Backend spawn failed (attempt {}/3), retrying in {}ms...", attempt, delay_ms);
+                                std::thread::sleep(Duration::from_millis(delay_ms as u64));
+                            }
+                        }
+                    }
+                }
+                
+                if let Some(e) = last_error {
+                    eprintln!("❌ SPAWN_FAILED after 3 attempts: path={:?} error={}", candidate, e);
+                }
+                return;
             } else {
-                PathBuf::from("../../backend")
+                println!("  ⚠️ main.py not found at {:?}", main_py);
             }
         } else {
-            PathBuf::from("../../backend")
-        }
-    };
-
-    println!("RESOLVED_BACKEND_PATH={:?}", backend_dir);
-    
-    // Retry logic with backoff
-    let mut last_error = None;
-    for attempt in 1..=3 {
-        match Command::new("python3")
-            .arg("main.py")
-            .current_dir(&backend_dir)
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn()
-        {
-            Ok(_) => {
-                println!("SPAWN_OK attempt={} path={:?}", attempt, backend_dir);
-                return;
-            }
-            Err(e) => {
-                last_error = Some(e);
-                if attempt < 3 {
-                    let delay_ms = match attempt {
-                        1 => 500,
-                        2 => 1000,
-                        _ => 2000,
-                    };
-                    println!("⚠️ Backend spawn failed (attempt {}/3), retrying in {}ms...", attempt, delay_ms);
-                    std::thread::sleep(std::time::Duration::from_millis(delay_ms));
-                }
-            }
+            println!("  ❌ Path does not exist: {:?}", candidate);
         }
     }
     
-    if let Some(e) = last_error {
-        eprintln!("❌ SPAWN_FAILED after 3 attempts: path={:?} error={}", backend_dir, e);
-    }
+    eprintln!("❌ BACKEND_NOT_FOUND: No valid backend path found in {} candidates", candidates.len());
 }
 
 fn main() {

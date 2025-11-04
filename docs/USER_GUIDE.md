@@ -1,8 +1,12 @@
-# MONAD User Guide
+---
+title: User Guide
+version: 1.0.0
+lastUpdated: 2025-01-27
+author: MONAD System
+status: Production Ready ✅
+---
 
-**Version:** 3.7.0  
-**Date:** 2025-01-27  
-**Status:** Production Ready ✅
+# MONAD User Guide
 
 ---
 
@@ -17,7 +21,8 @@ MONAD is your secure, offline AI assistant. Everything runs locally on your devi
 ### First Run
 
 1. **Boot Screen** - MONAD initializes its neural core (3-5 seconds)
-2. **Setup Wizard** - Complete the 11-step onboarding:
+2. **Backend Auto-Launch** - The Python FastAPI backend automatically starts (verify in Debug Overlay: Cmd+Shift+D)
+3. **Setup Wizard** - Complete the 11-step onboarding:
    - Enter your name
    - Set a password (if desired)
    - Choose your use type (Personal, Professional, or Both)

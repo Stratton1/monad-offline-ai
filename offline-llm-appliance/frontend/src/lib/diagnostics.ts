@@ -22,6 +22,24 @@ export interface HealthCheckResult {
 }
 
 /**
+ * Simple backend health check that returns status string
+ */
+export async function getBackendHealthStatus(): Promise<string> {
+  try {
+    const result = await checkBackendHealth(3000);
+    if (result.healthy) {
+      return 'Healthy';
+    } else if (result.status === 'timeout') {
+      return 'Timeout';
+    } else {
+      return 'Unresponsive';
+    }
+  } catch {
+    return 'Offline';
+  }
+}
+
+/**
  * Check backend health with timeout
  */
 export async function checkBackendHealth(timeoutMs = 5000): Promise<HealthCheckResult> {
