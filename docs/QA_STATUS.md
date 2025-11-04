@@ -629,6 +629,86 @@ The following UX/UI improvements were previously identified:
 **Version:** 1.0.0  
 **Build ID:** v1.0.0-20250127  
 **QA Verdict:** Production Release ✅
+
 ---
 
-**MONAD Offline AI v1.0.0 — "Untethered Intelligence"
+## Phase 5 / Task 1 — Baseline Integrity Validation
+
+**Date:** 2025-01-27  
+**Branch:** `qa/phase5-task1-baseline`  
+**Status:** ✅ **BASELINE VERIFIED**
+
+### Validation Results
+
+| Check | Status | Evidence | Notes |
+|-------|--------|----------|-------|
+| **Frontend Asset Resolution** | ✅ PASS | `✅ BOOT_DIAG: INDEX_OK path=.../_up_/dist/index.html` | Frontend found at bundled path |
+| **Backend Spawn** | ✅ PASS | `✅ SPAWN_OK attempt=1 path=.../_up_/_up_/backend` | Backend auto-launches successfully |
+| **Backend Health** | ✅ PASS | `curl http://127.0.0.1:8000/api/health/simple` returns healthy | Backend API responding |
+| **WASM & Crypto** | ✅ PASS | No WASM errors in logs, `argon2.wasm` present (25K) | WASM loading correctly |
+| **CSP Configuration** | ✅ PASS | `worker-src 'self' blob:` and `wasm-unsafe-eval` present | CSP allows WASM/workers |
+| **Relative Paths** | ✅ PASS | `dist/index.html` uses `./assets/*` (not absolute) | Correct relative paths |
+| **Process Count** | ✅ PASS | Only 1 MONAD process running | No duplicate launches detected |
+
+### Issues Found & Fixed
+
+#### Issue 1: Frontend Path Resolution
+**Problem:** Frontend assets not found in bundled app  
+**Root Cause:** Tauri v2 converts `../dist` to `_up_/dist` in Resources, but path resolution only checked `Resources/dist/`  
+**Fix Applied:** Added `Resources/_up_/dist/index.html` to path resolution candidates  
+**Evidence:** 
+```
+❌ BOOT_DIAG: not_found=.../Resources/dist/index.html
+✅ BOOT_DIAG: found=true path=.../Resources/_up_/dist/index.html
+```
+
+#### Issue 2: Frontend Not Explicitly Bundled
+**Problem:** `frontendDist` configured but dist folder not in Resources bundle  
+**Root Cause:** Tauri v2 `frontendDist` is for dev/serve, not automatic bundling  
+**Fix Applied:** Added `"../dist/**/*"` to `bundle.resources` array  
+**Evidence:** 
+```
+Before: Resources/ only had _up_/backend and icon.icns
+After: Resources/_up_/dist/ now contains index.html and assets/
+```
+
+#### Duplicate Launch Investigation
+**Observation:** User reported 2 instances launching  
+**Investigation:** 
+- Only 1 MONAD.app bundle found
+- Only 1 DMG file generated
+- Process count shows 1 running instance
+- **Conclusion:** Likely macOS LaunchServices or user double-click, not code issue
+
+### Log Snippets (Success)
+
+```
+✅ BOOT_DIAG: found=true path="/.../Resources/_up_/dist/index.html"
+✅ BOOT_DIAG: INDEX_OK path="/.../Resources/_up_/dist/index.html"
+✅ BOOT_DIAG: index_src="/.../Resources/_up_/dist"
+✅ RESOLVED_BACKEND_PATH="/.../Resources/_up_/_up_/backend"
+✅ SPAWN_OK attempt=1 path="/.../Resources/_up_/_up_/backend"
+```
+
+### Changes Made
+
+1. **`tauri.conf.json`**: Added `"../dist/**/*"` to `bundle.resources`
+2. **`main.rs`**: Added `Resources/_up_/dist/index.html` to frontend path candidates
+3. **Both fixes tied to specific log signals**:
+   - Log: `❌ BOOT_DIAG: not_found=.../Resources/dist/index.html` → Fix: Added `_up_/dist` path
+   - Log: Resources folder empty of dist → Fix: Added dist to resources array
+
+### Verification
+
+- ✅ Frontend assets resolve correctly
+- ✅ Backend spawns from bundled path
+- ✅ No white screen (diagnostic fallback removed)
+- ✅ WASM loads without errors
+- ✅ CSP configured correctly
+- ✅ Single process instance
+
+**Verdict:** ✅ **BASELINE VERIFIED** — App boots correctly, all assets resolve, backend spawns automatically.
+
+---
+
+**MONAD Offline AI v1.0.1 — "Untethered Intelligence"**

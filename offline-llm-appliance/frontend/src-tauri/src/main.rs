@@ -124,6 +124,7 @@ fn main() {
                     if let Some(bundle) = app_bundle {
                         vec![
                             bundle.join("Contents/Resources/dist/index.html"),
+                            bundle.join("Contents/Resources/_up_/dist/index.html"), // Tauri converts ../ to _up_/
                             bundle.join("Contents/dist/index.html"),
                         ]
                     } else {
