@@ -22,16 +22,16 @@ export default function DebugOverlay({
   setupDone, 
   configChecked, 
   currentStage, 
-  configSummary,
+  configSummary: _configSummary, // Unused but kept for API compatibility
   backendStatus = 'unknown'
 }: DebugOverlayProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [diagnostics, setDiagnostics] = useState(getBootDiagnostics());
 
   // Check if debug mode is enabled
-  const isDebugMode = (import.meta as { env?: { DEV?: boolean } }).env?.DEV || 
+  const isDebugMode = (import.meta as any).env?.DEV || 
                       (window as any).__MONAD_DEBUG__ === true ||
-                      process.env.MONAD_DEBUG === '1';
+                      (typeof process !== 'undefined' && (process.env as any)?.MONAD_DEBUG === '1');
 
   // Update diagnostics periodically
   useEffect(() => {

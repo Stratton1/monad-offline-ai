@@ -15,7 +15,7 @@ import {
   initialize,
 } from "./lib/auth";
 import { hasRegistry } from "./chats/registry";
-import { healthCheckLoop, getBootDiagnostics } from "./lib/diagnostics";
+import { healthCheckLoop } from "./lib/diagnostics";
 
 export default function App() {
   const [bootDone, setBootDone] = useState(false);
@@ -248,15 +248,11 @@ export default function App() {
   useEffect(() => {
     if (!configChecked) return;
     
-    // Start health check loop
-    const healthCheckPromise = healthCheckLoop((status) => {
+    // Start health check loop (runs indefinitely)
+    healthCheckLoop((status) => {
       setBackendStatus(status);
       (window as any).__MONAD_BACKEND_STATUS__ = status;
     }, 20); // Check up to 20 times (effectively runs indefinitely)
-    
-    return () => {
-      // Cleanup if needed
-    };
   }, [configChecked]);
 
   return (

@@ -69,7 +69,7 @@ export async function deriveKey(
     console.error('[Crypto] Argon2id derivation failed:', error);
     // Log WASM failure for diagnostics
     if (error instanceof Error && (error.message.includes('wasm') || error.message.includes('WASM'))) {
-      import('./diagnostics').then(({ logWasmFailure }) => {
+      import('../diagnostics').then(({ logWasmFailure }) => {
         logWasmFailure(error as Error);
       }).catch(() => {
         // Diagnostics module not available, log to window

@@ -123,7 +123,7 @@ export function getBootDiagnostics(): BootDiagnostics {
   return {
     bootStage: (window as any).__MONAD_BOOT_STAGE__ || 'unknown',
     cspMode: csp.includes('wasm-unsafe-eval') ? 'wasm-enabled' : 'strict',
-    assetBase: import.meta.env.BASE_URL || './',
+    assetBase: (import.meta as any).env?.BASE_URL || './',
     backendStatus: (window as any).__MONAD_BACKEND_STATUS__ || 'unknown',
     lastError: (window as any).__MONAD_LAST_ERROR__ || null,
     timestamp: new Date().toISOString(),
