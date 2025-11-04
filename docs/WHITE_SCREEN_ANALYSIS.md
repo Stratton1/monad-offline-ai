@@ -236,7 +236,112 @@ ls -la src-tauri/target/release/bundle/macos/MONAD.app/Contents/Resources/
 - If `dist` folder still not in bundle after patches, check Tauri v2 `frontendDist` behavior
 - Consider adding a post-build script to verify bundle contents
 
+---
+
+## ✅ **FIXES APPLIED (2025-01-27)**
+
+### Root Causes Identified & Resolved
+
+1. **Frontend Asset Resolution** ✅
+   - **Issue:** Tauri v2 asset resolver not checking bundled paths correctly
+   - **Fix:** Enhanced `main.rs` to check bundled paths first (`Contents/Resources/dist/index.html`)
+   - **Diagnostics:** Added `BOOT_DIAG` logging with `cwd`, `exe`, `searched_paths[]`, `found=<bool>`
+   - **Fallback:** Improved diagnostic HTML with CSP summary and searched paths
+
+2. **Relative Path Configuration** ✅
+   - **Issue:** `index.html` used absolute paths (`/monad-icon.svg`, `/src/main.tsx`)
+   - **Fix:** Changed to relative paths (`./monad-icon.svg`, `./src/main.tsx`)
+   - **Added:** Boot beacon `console.info('BOOT_OK', timestamp)` for diagnostics
+
+3. **Backend Spawn Reliability** ✅
+   - **Issue:** Hardcoded `../../backend` path, no retry logic
+   - **Fix:** Enhanced path resolution with bundled resource detection
+   - **Added:** Retry logic with exponential backoff (3 attempts: 500ms, 1s, 2s)
+   - **Logging:** `RESOLVED_BACKEND_PATH` and `SPAWN_OK` diagnostic messages
+
+4. **WASM/CSP Alignment** ✅
+   - **Issue:** Missing `worker-src` in CSP
+   - **Fix:** Added `worker-src 'self' blob:;` to CSP
+   - **Added:** WASM failure logging to diagnostics module
+
+5. **Diagnostics & Health Monitoring** ✅
+   - **Created:** `frontend/src/lib/diagnostics.ts` with health check loop
+   - **Enhanced:** `DebugOverlay` with `Cmd+Shift+D` toggle, backend status, CSP mode
+   - **Added:** Health check loop in `App.tsx` with status tracking
+
+6. **Error Boundaries** ✅
+   - **Issue:** Lazy-loaded chats not wrapped with ErrorBoundary
+   - **Fix:** Wrapped SetupWizard and all lazy-loaded chats (Everyday, Journal, ProStudio, Dispatch) with ErrorBoundary
+
+### Before/After Snippets
+
+**Before (main.rs):**
+```rust
+let dev_paths = vec![
+    PathBuf::from("../dist/index.html"),
+    // ...
+];
+```
+
+**After (main.rs):**
+```rust
+// Check bundled location first (for packaged app)
+let bundled_paths = if let Some(ref exe) = exe_path {
+    // MONAD.app/Contents/MacOS/monad -> MONAD.app/Contents/Resources/dist/index.html
+    let app_bundle = dir.parent().and_then(|p| p.parent());
+    // ...
+};
+println!("BOOT_DIAG: searched_paths={:?}", all_paths);
+println!("✅ BOOT_DIAG: found=true path={:?}", found_path);
+```
+
+**Before (index.html):**
+```html
+<link rel="icon" href="/monad-icon.svg" />
+<script type="module" src="/src/main.tsx"></script>
+```
+
+**After (index.html):**
+```html
+<link rel="icon" href="./monad-icon.svg" />
+<script type="module" src="./src/main.tsx"></script>
+<script>
+  console.info('BOOT_OK', new Date().toISOString());
+</script>
+```
+
+### How to Self-Diagnose Next Time
+
+1. **Check Boot Logs:**
+   ```bash
+   ./src-tauri/target/release/bundle/macos/MONAD.app/Contents/MacOS/MONAD
+   ```
+   Look for:
+   - `BOOT_DIAG: cwd=...`
+   - `BOOT_DIAG: searched_paths=[...]`
+   - `✅ BOOT_DIAG: found=true` or `⚠️ BOOT_DIAG: FALLBACK_DIAG_SHOWN`
+
+2. **Check Debug Overlay:**
+   - Press `Cmd+Shift+D` to toggle debug overlay
+   - Check `backend`, `csp`, `assetBase`, `lastError` fields
+
+3. **Check Backend Logs:**
+   - Look for `RESOLVED_BACKEND_PATH=...`
+   - Look for `SPAWN_OK attempt=...` or `SPAWN_FAILED after 3 attempts`
+
+4. **Verify Asset Paths:**
+   ```bash
+   cd frontend && npm run build
+   grep -E "(href|src)=" dist/index.html
+   # Should show relative paths (./assets/...)
+   ```
+
+5. **Check Bundle Contents:**
+   ```bash
+   ls -la src-tauri/target/release/bundle/macos/MONAD.app/Contents/Resources/
+   # Should show dist/ and backend/ folders
+   ```
 
 ---
 
-**MONAD Offline AI v1.0.0 — "Untethered Intelligence"
+**MONAD Offline AI v1.0.0 — "Untethered Intelligence"**
