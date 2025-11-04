@@ -104,6 +104,22 @@ fn launch_backend(app: &tauri::App) {
 }
 
 fn main() {
+    // Runtime guard: prevent duplicate instances
+    if let Ok(output) = std::process::Command::new("pgrep")
+        .arg("-f")
+        .arg("MONAD.app")
+        .output()
+    {
+        let count = String::from_utf8_lossy(&output.stdout)
+            .lines()
+            .filter(|line| !line.is_empty())
+            .count();
+        if count > 1 {
+            eprintln!("⚠️ MONAD duplicate instance detected ({} instances), exiting second instance.", count);
+            std::process::exit(0);
+        }
+    }
+    
     tauri::Builder::default()
         .setup(|app| {
             // 🧩 BOOT_DIAG: Enhanced frontend asset resolution

@@ -285,6 +285,14 @@ npm run tauri:build
    - **Resolution:** Changed `ai.monad.offline` to `ai-monad-offline`
    - **Status:** ✅ Resolved
 
+4. **DMG Duplication Fix** (v1.0.2)
+   - **Error:** MONAD.app launching twice when DMG is mounted (duplicate instances)
+   - **Root Cause:** macOS Finder auto-opens DMG windows, and user may manually launch, causing duplicate instances
+   - **Resolution:** Added runtime guard in `main.rs` to detect and prevent duplicate instances using `pgrep` check
+   - **Implementation:** Runtime guard checks for multiple MONAD.app processes on startup and exits second instance
+   - **Status:** ✅ Resolved (v1.0.2)
+   - **Verification:** Single process at runtime, one Finder window, manual launch only
+
 ### Build Optimization Notes
 
 - Frontend bundle is ~1.4MB (suggested optimization: code splitting)
