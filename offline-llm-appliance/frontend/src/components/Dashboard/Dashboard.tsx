@@ -12,6 +12,7 @@ import HeaderBar from './HeaderBar';
 import ActivityIndicator from './ActivityIndicator';
 import SettingsModal from './SettingsModal';
 import SearchPanel from './SearchPanel';
+import ErrorBoundary from '../ErrorBoundary';
 import { getRegistry } from '../../lib/library';
 import { useAppSessionStore } from '../../store/appSessionStore';
 import { getAuthState } from '../../lib/auth';
@@ -116,43 +117,53 @@ export default function Dashboard() {
         />
         
         <div className="flex-1 overflow-hidden">
-          <Suspense
-            fallback={
-              <div className="h-full flex items-center justify-center">
-                <div className="text-gray-400">Loading chat...</div>
-              </div>
-            }
-          >
-            {activeChat.kind === 'Everyday' && (
-              <EverydayChat
-                chatId={activeChat.id}
-                title={activeChat.title}
-                onTitleChange={handleChatTitleChange}
-              />
-            )}
-            {activeChat.kind === 'Journal' && (
-              <JournalChat
-                chatId={activeChat.id}
-                title={activeChat.title}
-                onTitleChange={handleChatTitleChange}
-              />
-            )}
-            {(activeChat.kind === 'ProStudioA' || activeChat.kind === 'ProStudioB') && (
-              <ProStudioChat
-                chatId={activeChat.id}
-                title={activeChat.title}
-                onTitleChange={handleChatTitleChange}
-                descriptor={activeChat}
-              />
-            )}
-            {activeChat.kind === 'Dispatch' && (
-              <DispatchChat
-                chatId={activeChat.id}
-                title={activeChat.title}
-                onTitleChange={handleChatTitleChange}
-              />
-            )}
-          </Suspense>
+          <ErrorBoundary>
+            <Suspense
+              fallback={
+                <div className="h-full flex items-center justify-center">
+                  <div className="text-gray-400">Loading chat...</div>
+                </div>
+              }
+            >
+              {activeChat.kind === 'Everyday' && (
+                <ErrorBoundary>
+                  <EverydayChat
+                    chatId={activeChat.id}
+                    title={activeChat.title}
+                    onTitleChange={handleChatTitleChange}
+                  />
+                </ErrorBoundary>
+              )}
+              {activeChat.kind === 'Journal' && (
+                <ErrorBoundary>
+                  <JournalChat
+                    chatId={activeChat.id}
+                    title={activeChat.title}
+                    onTitleChange={handleChatTitleChange}
+                  />
+                </ErrorBoundary>
+              )}
+              {(activeChat.kind === 'ProStudioA' || activeChat.kind === 'ProStudioB') && (
+                <ErrorBoundary>
+                  <ProStudioChat
+                    chatId={activeChat.id}
+                    title={activeChat.title}
+                    onTitleChange={handleChatTitleChange}
+                    descriptor={activeChat}
+                  />
+                </ErrorBoundary>
+              )}
+              {activeChat.kind === 'Dispatch' && (
+                <ErrorBoundary>
+                  <DispatchChat
+                    chatId={activeChat.id}
+                    title={activeChat.title}
+                    onTitleChange={handleChatTitleChange}
+                  />
+                </ErrorBoundary>
+              )}
+            </Suspense>
+          </ErrorBoundary>
         </div>
 
         {/* Modals */}

@@ -15,6 +15,7 @@ import {
   initialize,
 } from "./lib/auth";
 import { hasRegistry } from "./chats/registry";
+import { healthCheckLoop, getBootDiagnostics } from "./lib/diagnostics";
 
 export default function App() {
   const [bootDone, setBootDone] = useState(false);
@@ -24,6 +25,12 @@ export default function App() {
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [currentStage, setCurrentStage] = useState("boot");
   const [, setIsTauri] = useState(false);
+  const [backendStatus, setBackendStatus] = useState<'connected' | 'retrying' | 'down' | 'unknown'>('unknown');
+
+  // Set boot stage for diagnostics
+  useEffect(() => {
+    (window as any).__MONAD_BOOT_STAGE__ = currentStage;
+  }, [currentStage]);
 
   // 🔐 Initialize auth and check unlock state
   useEffect(() => {
@@ -217,6 +224,7 @@ export default function App() {
           configChecked={configChecked}
           currentStage={currentStage}
           configSummary={configSummary}
+          backendStatus={backendStatus}
         />
       </>
     );
@@ -229,13 +237,27 @@ export default function App() {
   useEffect(() => {
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       console.error('[App] Unhandled promise rejection:', event.reason);
-      // Non-blocking: just log for now
-      // In production, could show a toast notification
+      (window as any).__MONAD_LAST_ERROR__ = `Promise rejection: ${event.reason}`;
     };
 
     window.addEventListener('unhandledrejection', handleUnhandledRejection);
     return () => window.removeEventListener('unhandledrejection', handleUnhandledRejection);
   }, []);
+
+  // Backend health check loop
+  useEffect(() => {
+    if (!configChecked) return;
+    
+    // Start health check loop
+    const healthCheckPromise = healthCheckLoop((status) => {
+      setBackendStatus(status);
+      (window as any).__MONAD_BACKEND_STATUS__ = status;
+    }, 20); // Check up to 20 times (effectively runs indefinitely)
+    
+    return () => {
+      // Cleanup if needed
+    };
+  }, [configChecked]);
 
   return (
     <ErrorBoundary>
@@ -253,6 +275,7 @@ export default function App() {
           configChecked={configChecked}
           currentStage={currentStage}
           configSummary={configSummary}
+          backendStatus={backendStatus}
         />
         <AnimatePresence mode="wait">
           {needsUnlock ? (
@@ -265,7 +288,9 @@ export default function App() {
             </motion.div>
           ) : !setupDone ? (
             <motion.div key="setup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1 }}>
-              <SetupWizard onComplete={handleSetupComplete} />
+              <ErrorBoundary>
+                <SetupWizard onComplete={handleSetupComplete} />
+              </ErrorBoundary>
             </motion.div>
           ) : (
             <motion.div key="dashboard" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1 }}>

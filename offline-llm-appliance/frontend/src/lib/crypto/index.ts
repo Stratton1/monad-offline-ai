@@ -67,6 +67,15 @@ export async function deriveKey(
     };
   } catch (error) {
     console.error('[Crypto] Argon2id derivation failed:', error);
+    // Log WASM failure for diagnostics
+    if (error instanceof Error && (error.message.includes('wasm') || error.message.includes('WASM'))) {
+      import('./diagnostics').then(({ logWasmFailure }) => {
+        logWasmFailure(error as Error);
+      }).catch(() => {
+        // Diagnostics module not available, log to window
+        (window as any).__MONAD_LAST_ERROR__ = `WASM: ${(error as Error).message}`;
+      });
+    }
     throw new Error('Failed to derive key from password');
   }
 }
