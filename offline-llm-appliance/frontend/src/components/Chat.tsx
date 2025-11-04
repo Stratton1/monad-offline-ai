@@ -1,4 +1,11 @@
-import React, { useCallback, useState, useEffect } from "react";
+/**
+ * Chat.tsx
+ * Purpose: Main chat interface component that handles AI conversations, message management, and user interactions.
+ * Usage: Central component in Dashboard, provides the primary AI interaction experience.
+ * Privacy: Manages chat messages in local state and localStorage, sends prompts to local backend only.
+ */
+
+import { useCallback, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useChatStore } from "../store/chatStore";
 import { generateText } from "../utils/api";

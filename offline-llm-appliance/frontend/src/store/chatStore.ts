@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { saveConfig, loadConfig } from "../lib/config";
+import { loadConfig } from "../lib/config";
 
 export interface ChatMessage {
   id: string;
@@ -59,7 +59,8 @@ export const useChatStore = create<ChatState>((set) => ({
     try {
       const config = loadConfig();
       if (config?.autosave) {
-        localStorage.setItem("monad-chat-history", JSON.stringify(get().messages));
+        const state = useChatStore.getState();
+        localStorage.setItem("monad-chat-history", JSON.stringify(state.messages));
       }
     } catch (error) {
       console.error("Error saving chat history:", error);

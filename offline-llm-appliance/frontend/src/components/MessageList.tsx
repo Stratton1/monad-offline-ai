@@ -1,15 +1,21 @@
-import React, { useEffect, useRef } from 'react'
+/**
+ * MessageList.tsx
+ * Purpose: Renders the conversation history displaying user messages and AI responses with proper formatting and animations.
+ * Usage: Used within Chat component to display the message thread with scroll-to-bottom functionality.
+ * Privacy: Displays locally stored chat messages only, no external data transmission.
+ */
+
+import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { useChatStore } from '../store/chatStore'
+import { ChatMessage } from '../store/chatStore'
 import { Bot, User } from 'lucide-react'
 
-function MessageList() {
-  const { messages } = useChatStore()
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+interface MessageListProps {
+  messages: ChatMessage[];
+}
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+function MessageList({ messages }: MessageListProps) {
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const el = document.getElementById("messages-end")
@@ -94,7 +100,7 @@ function MessageList() {
               </div>
               
               {/* Generating indicator */}
-              {message.isGenerating && (
+              {message.loading && (
                 <div className="flex items-center space-x-1 mt-2">
                   <div className="flex space-x-1">
                     <div className="w-1 h-1 bg-primary-400 rounded-full animate-bounce"></div>

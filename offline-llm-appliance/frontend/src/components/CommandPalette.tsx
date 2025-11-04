@@ -1,4 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+/**
+ * CommandPalette.tsx
+ * Purpose: Modal command palette providing quick access to application features via Ctrl+K/Cmd+K shortcut.
+ * Usage: Overlay component accessible from Chat interface, provides commands for export, settings, and model management.
+ * Privacy: Manages local configuration and chat data only, no external data transmission.
+ */
+
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { loadConfig, saveConfig, clearConfig } from "../lib/config";
 
@@ -146,13 +153,17 @@ export default function CommandPalette({
       case "model":
         const currentConfig = loadConfig();
         const newModel = currentConfig?.selectedModel === "TinyLlama" ? "Phi-3" : "TinyLlama";
-        saveConfig({ selectedModel: newModel });
+        if (currentConfig) {
+          saveConfig({ ...currentConfig, selectedModel: newModel });
+        }
         onSwitchModel?.(newModel);
         break;
       case "reasoning":
         const config = loadConfig();
         const newReasoning = config?.reasoningLevel === "standard" ? "deep" : "standard";
-        saveConfig({ reasoningLevel: newReasoning });
+        if (config) {
+          saveConfig({ ...config, reasoningLevel: newReasoning });
+        }
         onToggleReasoning?.();
         break;
       case "clear":

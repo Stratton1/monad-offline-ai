@@ -1,10 +1,18 @@
 // src/utils/api.ts
 
-// ✅ Define backend base URL explicitly
-export const API_BASE = "http://localhost:8000";
+// ✅ Detect Tauri environment and set appropriate API base URL
+const isTauri = !!(window as any).__TAURI__;
+export const API_BASE = isTauri
+  ? "http://127.0.0.1:8000"
+  : (import.meta as any).env?.VITE_API_URL || "http://localhost:8000";
 
 // ✅ Core helper for text generation
 export async function generateText(prompt: string): Promise<string> {
+  return sendMessage(prompt);
+}
+
+// ✅ Send message (alias for generateText)
+export async function sendMessage(prompt: string): Promise<string> {
   try {
     const res = await fetch(`${API_BASE}/api/generate`, {
       method: "POST",

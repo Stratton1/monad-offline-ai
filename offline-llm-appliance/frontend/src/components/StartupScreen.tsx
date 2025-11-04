@@ -1,3 +1,10 @@
+/**
+ * StartupScreen.tsx
+ * Purpose: Simple startup splash screen component displaying MONAD logo and branding during application initialization.
+ * Usage: Displayed briefly during application startup before transitioning to BootScreen or main interface.
+ * Privacy: Static display component with no data collection or transmission.
+ */
+
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 

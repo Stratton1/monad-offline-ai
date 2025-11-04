@@ -1,9 +1,18 @@
-import React, { useState, useEffect, useRef } from "react";
+/**
+ * BootScreen.tsx
+ * Purpose: Renders the cinematic 3D boot sequence with Three.js animation, progress bar, and boot messages.
+ * Usage: Displayed on application startup before transitioning to SetupWizard or Dashboard.
+ * Privacy: Reads user config from localStorage to personalize boot messages, no data transmission.
+ */
+
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as THREE from "three";
 import { loadConfig } from "../lib/config";
 
 export default function BootScreen({ onComplete }: { onComplete: () => void }) {
+  console.log("[BootScreen] Component mounted");
+  
   const [progress, setProgress] = useState(0);
   const [bootText, setBootText] = useState("Initializing neural core...");
   const [userName, setUserName] = useState("");
@@ -30,14 +39,20 @@ export default function BootScreen({ onComplete }: { onComplete: () => void }) {
   ];
 
   useEffect(() => {
+    console.log("🚀 BootScreen: Starting boot sequence");
+    
     const interval = setInterval(() => {
       setProgress((p) => {
         const newProgress = p + Math.random() * 8 + 2;
         if (newProgress >= 100) {
           clearInterval(interval);
+          console.log("✅ BootScreen: Progress complete, calling onComplete");
           setTimeout(() => {
             setBootText("MONAD is ready.");
-            setTimeout(onComplete, 1000);
+            setTimeout(() => {
+              console.log("✅ BootScreen: Calling onComplete callback");
+              onComplete();
+            }, 1000);
           }, 500);
           return 100;
         }
@@ -46,6 +61,25 @@ export default function BootScreen({ onComplete }: { onComplete: () => void }) {
     }, 300);
 
     return () => clearInterval(interval);
+  }, [onComplete]);
+
+  // Hard fallback: ensure onComplete is called even if progress fails
+  useEffect(() => {
+    const hardFailTimer = setTimeout(() => {
+      console.warn("⚠️ BootScreen: Hard fallback triggered — forcing onComplete");
+      onComplete();
+    }, 15000); // hard fail after 15s
+    
+    return () => clearTimeout(hardFailTimer);
+  }, [onComplete]);
+
+  // Additional safety timer: force complete after 10s regardless
+  useEffect(() => {
+    const forceTimer = setTimeout(() => {
+      console.log("✅ BootScreen: Forcing complete after 10 s");
+      onComplete();
+    }, 10000);
+    return () => clearTimeout(forceTimer);
   }, [onComplete]);
 
   useEffect(() => {

@@ -1,4 +1,11 @@
-import React, { useState, useEffect } from "react";
+/**
+ * PrivacyBadge.tsx
+ * Purpose: Visual indicator component displaying privacy status, security level, and offline operation confirmation.
+ * Usage: Displayed throughout the UI to reinforce privacy-first messaging and security status.
+ * Privacy: Shows local privacy status only, no data collection or transmission.
+ */
+
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 interface PrivacyBadgeProps {

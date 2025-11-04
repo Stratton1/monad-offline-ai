@@ -1,4 +1,11 @@
-import React, { useState } from 'react'
+/**
+ * Sidebar.tsx
+ * Purpose: Navigation sidebar component providing access to chat, settings, system status, and privacy controls.
+ * Usage: Persistent sidebar in Dashboard layout, displays system information and navigation options.
+ * Privacy: Shows local system status and privacy indicators, no external data transmission.
+ */
+
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
   MessageSquare, 
@@ -25,7 +32,7 @@ interface SidebarProps {
 function Sidebar({ isConnected = true, onReconnect = () => {}, config }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
-  const [theme, setTheme] = useState("dark")
+  const [theme, setTheme] = useState(config?.theme || "dark")
 
   const toggleSidebar = () => {
     setIsCollapsed(!isCollapsed)

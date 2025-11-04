@@ -1,4 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react'
+/**
+ * ChatBox.tsx
+ * Purpose: Input component for composing and sending messages to the AI, includes send button and loading states.
+ * Usage: Used within Chat component to provide the message input interface with keyboard shortcuts and validation.
+ * Privacy: Handles local message input only, sends data to local backend only.
+ */
+
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Send, Loader2 } from 'lucide-react'
 import { useBackend } from '../hooks/useBackend'

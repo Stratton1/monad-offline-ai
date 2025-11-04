@@ -231,11 +231,22 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Three.js** - 3D graphics library
 - **Framer Motion** - Animation library
 
+## 📚 Documentation
+
+Comprehensive documentation is available in the [`docs/`](docs/) directory:
+
+- **[User Guide](docs/USER_GUIDE.md)** - Getting started and usage instructions
+- **[Testing](docs/TESTING.md)** - Test suite and quality assurance
+- **[Security](docs/SECURITY.md)** - Security features and best practices
+- **[Release Notes](docs/RELEASE_NOTES.md)** - Version history and changelog
+- **[Build Verification](docs/BUILD_VERIFICATION_REPORT.md)** - Build and packaging instructions
+- **[Distribution Plan](docs/DISTRIBUTION_PLAN.md)** - Distribution and deployment strategy
+- **[QA Status](docs/QA_STATUS.md)** - Quality assurance status and test results
+
 ## 📞 Support
 
 - **Issues**: [GitHub Issues](https://github.com/yourusername/monad-v3/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/yourusername/monad-v3/discussions)
-- **Documentation**: [Wiki](https://github.com/yourusername/monad-v3/wiki)
 
 ## 🎯 Roadmap
 
@@ -247,6 +258,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**MONAD v3** - *Your intelligent offline companion* 🧠✨
+**MONAD Offline AI v1.0.0 — "Untethered Intelligence"**
 
 *Built with ❤️ for privacy, performance, and personalization.*
