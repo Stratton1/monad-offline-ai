@@ -1,0 +1,30 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "enables the default permissions",
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "core:default"
+  ],
+  "allowlist": {
+    "all": false,
+    "core": {
+      "all": false,
+      "default": true,
+      "invoke": {
+        "all": false,
+        "ensure_chat_folder": true,
+        "write_secure_file": true,
+        "read_secure_file": true,
+        "export_pdf": true,
+        "export_rtf": true
+      }
+    },
+    "shell": {
+      "all": false,
+      "open": true
+    }
+  }
+}

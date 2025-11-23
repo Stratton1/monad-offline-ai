@@ -1,52 +1,35 @@
 # MONAD Offline AI - Git Ignore File
 
-# Model files (too large for Git)
-models/
-*.gguf
-*.bin
-*.safetensors
-
-# Virtual environments
+# Dependencies
+node_modules/
 venv/
 env/
 .venv/
 .env/
-
-# Node.js dependencies
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Build artifacts
-dist/
-build/
-*.tgz
-*.tar.gz
-
-# Python cache
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
+*.pyc
+*.pyo
+*.pyd
 .Python
-env/
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Environment variables and secrets
-.env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+# Build artifacts
+dist/
+target/
+build/
+*.egg-info/
+*.so
+*.dylib
+*.tgz
+*.tar.gz
 
-# Logs
-*.log
-logs/
-backend.log
-
-# OS generated files
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
 .DS_Store?
 ._*
@@ -54,13 +37,45 @@ backend.log
 .Trashes
 ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
+# Logs and temporary files
+*.log
+logs/
+backend.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log.*
+
+# Testing
+test-results/
+playwright-report/
+.pytest_cache/
+coverage/
+*.coverage
+.nyc_output/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+env
+
+# Model files (large binary files - too large for Git)
+models/
+*.gguf
+*.bin
+*.safetensors
+
+# Tauri build artifacts
+frontend/src-tauri/target/
+frontend/src-tauri/Cargo.lock
+desktop/src-tauri/target/
+desktop/src-tauri/Cargo.lock
 
 # Temporary files
 *.tmp
@@ -69,15 +84,16 @@ Thumbs.db
 *.rar
 *.7z
 
-# Tauri build artifacts
-desktop/src-tauri/target/
-desktop/src-tauri/Cargo.lock
-
 # Backup files
 *.backup
 *.bak
 *.old
+*_BACKUP_*
 
 # Download scripts and temporary files
 download_phi3.py
 commit_message.txt
+*.sample.json
+
+# Checksums (generated)
+CHECKSUMS.txt

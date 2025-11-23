@@ -1,122 +1,168 @@
-# MONAD v3.7 - Offline AI Desktop Application
+# MONAD v1.0.0 — Secure Offline AI Platform
 
-MONAD is a production-grade, secure, personalized offline AI desktop application that transforms your computer into an intelligent operating system. Built with Tauri v2 + React + FastAPI.
+> **"Untethered Intelligence"** — A production-grade, secure, personalized offline AI assistant that transforms your computer into an intelligent operating system.
 
-## 🚀 Features
+**Brand Promise:** "0 bytes leave your device. No subscription. Works on a plane, in a cabin, in an air-gapped lab. Yours. Not rented."
 
-- **100% Offline**: Runs completely offline using TinyLlama/Phi-3 models
-- **Desktop App**: Native cross-platform application using Tauri v2
-- **Cinematic Experience**: 3D animated boot sequence with Three.js
-- **Personalized AI**: Streamlined 11-step setup wizard for customization
+**Quick Links:** [User Guide](docs/USER_GUIDE.md) · [QA Status](docs/QA_STATUS.md) · [Project Structure](docs/PROJECT_STRUCTURE.md) · [Release Notes](docs/RELEASE_NOTES.md)
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+
+## 🎯 Overview
+
+MONAD v1.0.0 is a production-grade, secure, personalized offline AI platform that transforms your computer into an intelligent operating system. It remembers you, respects your privacy, and works entirely offline while providing enterprise-grade features and a premium user experience.
+
+Built with Tauri v2 + React + FastAPI.
+
+## ✨ Key Features
+
+### 🎬 **Cinematic Experience**
+- **3D Boot Sequence** - Animated Three.js logo with progress tracking
+- **Smooth Animations** - Framer Motion powered transitions throughout
+- **Premium UI** - Glass morphism, gradients, and professional polish
+
+### 🔐 **Security & Privacy**
+- **100% Offline** - Runs completely offline using TinyLlama/Phi-3 models
+- **Password Protection** - Optional encryption for sensitive data
+- **Privacy Badge** - Real-time security status indicator
+- **Local Storage** - All data stays on your device
+- **AES-GCM Encryption** - Complete local operation with encryption
+
+### 🧠 **Intelligent Features**
+- **Personalized Greetings** - "Hello, Joseph" and "Welcome back"
+- **Context Awareness** - File uploads integrate into AI reasoning
+- **Interest Tracking** - Dynamic tagging for personalized responses
 - **Four Starter Chats**: Everyday, Journal (secure), Pro Studio A/B, Dispatch
-- **Secure Library**: Encrypted save/export with PDF/RTF support
-- **Dashboard Integration**: Chat grid with secure routing and search
-- **Security Hardening**: CSP, IPC allowlist, clipboard scrubbing, idle locking
-- **Professional UI**: Modern glassmorphic design with 4 theme options
-- **Auto-Backend**: Python FastAPI server launches automatically
-- **Privacy-First**: Complete local operation with AES-GCM encryption
-- **Cross-Platform**: macOS, Windows, Linux support
+
+### 💬 **Advanced Chat Interface**
+- **Typing Indicator** - "MONAD is typing..." with animations
+- **Reasoning Toggle** - Standard ⇄ Deep reasoning modes
+- **Answer Style Controls** - Concise, Detailed, Creative, Technical
+- **Context Meter** - Visual progress bar for conversation length
+- **Command Palette** - Ctrl+K for advanced commands
+
+### 📁 **File Management**
+- **Import Support** - PDF, DOCX, TXT file processing
+- **Export Conversations** - Download chats as text files
+- **Context Integration** - Files become part of AI knowledge
+- **Autosave** - Conversations saved automatically
+- **Secure Library** - Encrypted save/export with PDF/RTF support
+
+### ⚙️ **Professional Controls**
+- **Model Switcher** - Toggle between AI models
+- **Session Management** - Resume previous conversations
+- **Configuration** - 20+ personalization options
+- **Keyboard Shortcuts** - Power user efficiency
+- **Dashboard Integration** - Chat grid with secure routing and search
+
+## 🚀 Quick Start
+
+### TL;DR
+```bash
+cd offline-llm-appliance/frontend
+npm install && npm run build && npm run tauri:build
+```
+
+### Prerequisites
+- Node.js 18+ and npm
+- Python 3.11+
+- 4GB+ RAM (for AI models)
+- Rust (for Tauri desktop builds)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Stratton1/monad-offline-ai.git
+   cd monad-offline-ai/offline-llm-appliance
+   ```
+
+2. **Install Backend Dependencies**
+   ```bash
+   cd backend
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+
+3. **Install Frontend Dependencies**
+   ```bash
+   cd ../frontend
+   npm install
+   ```
+
+4. **Download AI Model**
+   ```bash
+   cd ../backend
+   ./download_model.sh
+   # Or manually download tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+   ```
+
+5. **Start the Services (Development)**
+   ```bash
+   # Terminal 1 - Backend
+   cd offline-llm-appliance/backend
+   source venv/bin/activate
+   python main.py
+
+   # Terminal 2 - Frontend
+   cd offline-llm-appliance/frontend
+   npm run tauri dev
+   ```
+
+6. **Build Desktop App (Production)**
+   ```bash
+   cd offline-llm-appliance/frontend
+   npm run build
+   npm run tauri:build
+   # Output: src-tauri/target/release/bundle/macos/MONAD.app
+   ```
+
+7. **Open MONAD**
+   - Development: Tauri window opens automatically
+   - Production: Launch the built .app/.dmg/.msi/.deb
+   - **Backend auto-launch**: The Python FastAPI backend automatically spawns on app launch
+   - Complete the setup wizard
+   - Start chatting with your AI assistant!
+
+### Running the Application
+
+The desktop app automatically:
+- ✅ Launches the Python backend on startup
+- ✅ Bundles all required resources (frontend + backend)
+- ✅ Works fully offline (no internet required)
+- ✅ Provides diagnostic logs via Cmd+Shift+D (Debug Overlay)
 
 ## 🏗️ Architecture
 
-### Components
+### Frontend (React + TypeScript)
+- **Components**: Modular React components with TypeScript
+- **State Management**: Zustand for chat and configuration
+- **Animations**: Framer Motion for smooth transitions
+- **3D Graphics**: Three.js for boot sequence
+- **Styling**: Tailwind CSS with custom themes
 
-1. **Backend** (`/backend`) - FastAPI server handling LLM inference
-   - `main.py` - FastAPI application entry point
-   - `config.py` - Configuration management
-   - `llm_runner.py` - LLM execution using llama.cpp
-   - `routes/` - API endpoints for generation and health
+### Backend (Python + FastAPI)
+- **API**: FastAPI with async support
+- **AI Engine**: TinyLlama and Phi-3 integration via llama.cpp
+- **File Processing**: PDF/DOCX/TXT support
+- **Security**: Optional encryption and password protection
+- **Storage**: Local file system with JSON persistence
 
-2. **Frontend** (`/frontend`) - React + TypeScript + Vite interface
-   - Premium glassmorphic UI with dark theme
-   - Real-time chat interface
-   - System status monitoring
-   - Responsive design
+### Desktop (Tauri v2)
+- **Native Desktop App**: Cross-platform desktop application
+- **Automatic Backend Management**: Python FastAPI server starts automatically
+- **System Tray Integration**: Minimize to system tray
+- **Cross-Platform Support**: macOS, Windows, Linux
 
-3. **Desktop** (`/desktop`) - Tauri wrapper
-   - Native desktop application
-   - Automatic backend management
-   - System tray integration
-   - Cross-platform support
-
-## 📋 Prerequisites
-
-- **Node.js** 18+ and npm
-- **Python** 3.8+ with pip
-- **Rust** (for Tauri)
-- **TinyLlama Model**: Download the GGUF model file to `/Users/joseph/OfflineLLM/models/`
-
-## 🛠️ Installation
-
-1. **Clone and setup**:
-   ```bash
-   cd ~/OfflineLLM/offline-llm-appliance
-   npm run install:all
-   ```
-
-2. **Download TinyLlama model**:
-   ```bash
-   mkdir -p /Users/joseph/OfflineLLM/models
-   # Download tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf to the models directory
-   ```
-
-3. **Configure environment**:
-   ```bash
-   cp env .env
-   # Edit .env if needed to adjust model path or settings
-   ```
-
-## 🚀 Running the Application
-
-### Development Mode
-```bash
-# Start the desktop app in development mode
-cd frontend
-npm run tauri
+### Data Flow
 ```
-
-### Production Build
-```bash
-# Build production desktop application
-cd frontend
-npm run build
-npm run tauri:build
-```
-
-The built application will be available in:
-- `frontend/src-tauri/target/release/bundle/app/MONAD.app` (macOS)
-- `frontend/src-tauri/target/release/bundle/dmg/MONAD_Offline_AI.dmg` (macOS installer)
-- `frontend/src-tauri/target/release/bundle/msi/MONAD_Offline_AI.msi` (Windows installer)
-- `frontend/src-tauri/target/release/bundle/deb/MONAD_Offline_AI.deb` (Linux installer)
-
-## ✅ Current Status
-
-**MONAD Desktop Application is fully functional and ready for production deployment!**
-
-- ✅ **Tauri v2 Integration**: Complete desktop app transformation
-- ✅ **Backend Auto-Launch**: Python FastAPI server starts automatically
-- ✅ **Refined Onboarding**: Streamlined 11-step setup wizard
-- ✅ **Four Starter Chats**: Everyday, Journal (secure), Pro Studio A/B, Dispatch
-- ✅ **Secure Library**: Encrypted save/export with atomic writes
-- ✅ **Dashboard Integration**: Chat grid with secure routing
-- ✅ **Security Hardening**: CSP, IPC allowlist, clipboard scrubbing
-- ✅ **Cross-Platform**: macOS, Windows, Linux support
-- ✅ **Offline Operation**: Complete local AI processing
-- ✅ **Professional UI**: Modern, responsive interface
-
-### Production Build
-```bash
-# Build the frontend
-npm run build
-
-# Build the desktop application
-npm run tauri:build
-```
-
-### Backend Only
-```bash
-# Run just the FastAPI backend
-npm run start:backend
+User Input → Frontend → Backend API → AI Model → Response → Frontend → User
+     ↓
+Local Storage ← Configuration ← Setup Wizard ← User Preferences
 ```
 
 ## 🔧 Configuration
@@ -132,6 +178,7 @@ npm run start:backend
 | `TEMPERATURE` | `0.7` | Sampling temperature |
 | `TOP_P` | `0.9` | Top-p sampling parameter |
 | `REPEAT_PENALTY` | `1.1` | Repeat penalty |
+| `PORT` | `5005` | Backend server port |
 
 ### Model Requirements
 
@@ -139,6 +186,13 @@ npm run start:backend
 - **Size**: ~1.1B parameters
 - **Memory**: ~2GB RAM minimum
 - **Storage**: ~1GB disk space
+
+### Advanced Settings
+- **Security Level**: Standard vs Secure mode
+- **Save Mode**: Always, Ask, or Never save conversations
+- **Autosave**: Automatic conversation persistence
+- **Typing Indicator**: Show AI typing status
+- **Privacy Badge**: Display security status
 
 ## 📁 Project Structure
 
@@ -149,22 +203,24 @@ offline-llm-appliance/
 │   ├── config.py           # Configuration
 │   ├── llm_runner.py       # LLM execution
 │   ├── routes/             # API endpoints
+│   ├── tests/              # Backend tests
 │   └── requirements.txt    # Python dependencies
 ├── frontend/               # React frontend
 │   ├── src/
 │   │   ├── components/     # React components
+│   │   ├── chats/          # Chat interfaces
 │   │   ├── hooks/          # Custom hooks
+│   │   ├── lib/            # Utilities and config
 │   │   ├── store/          # State management
 │   │   └── utils/          # Utilities
+│   ├── src-tauri/          # Tauri desktop app
 │   └── package.json        # Frontend dependencies
-├── desktop/                # Tauri desktop app
-│   └── src-tauri/          # Rust source
 └── package.json            # Root package.json
 ```
 
 ## 🔌 API Endpoints
 
-### Backend API (http://localhost:8000)
+### Backend API (http://localhost:5005)
 
 - `GET /` - Root endpoint
 - `POST /api/generate` - Generate text response
@@ -176,12 +232,12 @@ offline-llm-appliance/
 
 ```bash
 # Generate text
-curl -X POST http://localhost:8000/api/generate \
+curl -X POST http://localhost:5005/api/generate \
   -H "Content-Type: application/json" \
   -d '{"prompt": "Hello, how are you?", "max_tokens": 100}'
 
 # Check health
-curl http://localhost:8000/api/health/simple
+curl http://localhost:5005/api/health/simple
 ```
 
 ## 🎨 UI Features
@@ -284,18 +340,21 @@ See [`docs/PACKAGING_READINESS.md`](../docs/PACKAGING_READINESS.md) for packagin
 1. **Model not found**:
    - Ensure the model file exists at the specified path
    - Check file permissions
+   - Run `./download_model.sh` in the backend directory
 
 2. **Backend won't start**:
    - Verify Python dependencies: `pip install -r backend/requirements.txt`
-   - Check port 8000 is available
+   - Check port 5005 is available
+   - Ensure virtual environment is activated
 
 3. **Frontend build fails**:
-   - Clear node_modules: `npm run clean`
-   - Reinstall dependencies: `npm run install:all`
+   - Clear node_modules: `rm -rf node_modules && npm install`
+   - Reinstall dependencies: `npm install`
 
 4. **Tauri build fails**:
    - Ensure Rust is installed: `rustup --version`
    - Install Tauri CLI: `npm install -g @tauri-apps/cli`
+   - Check Cargo is in PATH: `export PATH="$HOME/.cargo/bin:$PATH"`
 
 5. **Tests fail**:
    - Run `npm install` in frontend directory
@@ -304,31 +363,78 @@ See [`docs/PACKAGING_READINESS.md`](../docs/PACKAGING_READINESS.md) for packagin
 
 ### Logs
 
-- **Backend logs**: Check terminal output when running `npm run start:backend`
-- **Frontend logs**: Browser developer tools (F12)
+- **Backend logs**: Check terminal output when running `python main.py`
+- **Frontend logs**: Browser developer tools (F12) or Tauri console
 - **Desktop logs**: System console or terminal output
 - **Test logs**: Check `test-results/` and `playwright-report/` directories
 
-## 📄 License
+## ✅ Current Status
 
-MIT License - see LICENSE file for details.
+**MONAD Desktop Application is fully functional and ready for production deployment!**
+
+- ✅ **Tauri v2 Integration**: Complete desktop app transformation
+- ✅ **Backend Auto-Launch**: Python FastAPI server starts automatically
+- ✅ **Refined Onboarding**: Streamlined 11-step setup wizard
+- ✅ **Four Starter Chats**: Everyday, Journal (secure), Pro Studio A/B, Dispatch
+- ✅ **Secure Library**: Encrypted save/export with atomic writes
+- ✅ **Dashboard Integration**: Chat grid with secure routing
+- ✅ **Security Hardening**: CSP, IPC allowlist, clipboard scrubbing
+- ✅ **Cross-Platform**: macOS, Windows, Linux support
+- ✅ **Offline Operation**: Complete local AI processing
+- ✅ **Professional UI**: Modern, responsive interface
+- ✅ **Crypto Fix**: PBKDF2 key derivation (replaced Argon2 WASM)
+- ✅ **CORS Fixed**: Backend connection stable
+- ✅ **Model Loading**: Full offline AI integration complete
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **TinyLlama** - Lightweight language model
+- **Phi-3** - Microsoft's efficient language model
+- **FastAPI** - Modern Python web framework
+- **React** - Frontend framework
+- **Tauri** - Desktop application framework
+- **Three.js** - 3D graphics library
+- **Framer Motion** - Animation library
+
+## 📚 Documentation
+
+Comprehensive documentation is available in the [`docs/`](../docs/) directory:
+
+- **[User Guide](../docs/USER_GUIDE.md)** - Getting started and usage instructions
+- **[Testing](../docs/TESTING.md)** - Test suite and quality assurance
+- **[Security](../docs/SECURITY.md)** - Security features and best practices
+- **[Release Notes](../docs/RELEASE_NOTES.md)** - Version history and changelog
+- **[Build Verification](../docs/BUILD_VERIFICATION_REPORT.md)** - Build and packaging instructions
+- **[Distribution Plan](../docs/DISTRIBUTION_PLAN.md)** - Distribution and deployment strategy
+- **[QA Status](../docs/QA_STATUS.md)** - Quality assurance status and test results
 
 ## 📞 Support
 
-For issues and questions:
-- Check the troubleshooting section
-- Review the logs for error messages
-- Ensure all prerequisites are met
-- Verify model file is correctly placed
+- **Issues**: [GitHub Issues](https://github.com/Stratton1/monad-offline-ai/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Stratton1/monad-offline-ai/discussions)
+
+## 🎯 Roadmap
+
+- [ ] **v1.1** - Advanced encryption and security features
+- [ ] **v1.2** - Plugin system for custom AI models
+- [ ] **v1.3** - Multi-user support and collaboration
+- [ ] **v1.4** - Mobile app companion
+- [ ] **v1.5** - Cloud sync (optional) for cross-device access
 
 ---
 
-**MONAD v1.0.0** - Your offline AI companion
+**MONAD Offline AI v1.0.0 — "Untethered Intelligence"**
+
+*Built with ❤️ for privacy, performance, and personalization.*

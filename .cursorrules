@@ -1,0 +1,607 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# MONAD .cursorrules
+# Version: 2.1
+# Date: 2025-01-27
+#
+# Cursor MUST follow these rules when generating, editing, refactoring, or
+# documenting code in this repository.
+#
+# These rules:
+# - define what MONAD is and is not
+# - define how code is structured, named, styled, and documented
+# - define how features must behave from a privacy and UX standpoint
+# - define how Cursor should reason before proposing changes
+# - enforce code quality standards and compliance
+# - enforce safe-mode operation with limits and validation
+#
+# If ANY instruction from the user conflicts with these rules, Cursor MUST:
+# 1. Stop and call out the conflict
+# 2. Propose a compliant alternative aligned with these rules
+#
+# This file is authoritative. Treat it as a contract.
+# ─────────────────────────────────────────────────────────────────────────────
+
+# -----------------------------------------------------------------------------
+# SAFE-MODE OPERATION RULES
+# -----------------------------------------------------------------------------
+
+maxToolRuntime: 10  # Maximum seconds per tool call
+safeMode: true      # Enable safe-mode with validation checks
+approvedEditFolders:
+  - frontend/
+  - backend/
+  - docs/
+  - scripts/
+
+rules:
+  - Always perform ≥3 diagnostic checks before mutation
+  - No destructive actions without confirmation
+  - Limit concurrent tool calls to 5
+  - Validate all file paths before editing
+  - Check for existing files before creating new ones
+  - Verify dependencies before installation
+  - Test build after configuration changes
+
+
+# -----------------------------------------------------------------------------
+# 0. CORE PRODUCT PRINCIPLES (DO NOT VIOLATE)
+# -----------------------------------------------------------------------------
+
+MONAD is:
+- A local, offline AI desktop platform.
+- Sold on a physical drive / device.
+- Meant to be personal, private, and permanent (one-time purchase, no subscription).
+
+MONAD is NOT:
+- A cloud service.
+- A web SaaS.
+- "Just a chatbot."
+- A thin client to some API.
+
+All runtime inference happens entirely on-device using local models. No internet is required or assumed for core functionality.
+
+Cursor MUST NOT:
+- Add telemetry, analytics, metrics calls, A/B testing, "improve our service" pings.
+- Add dependency on commercial model APIs (OpenAI, Anthropic, etc.).
+- Insert any external CDN resources (fonts, analytics, scripts).
+- Add "sign in", "create account", "sync to cloud", or "check for updates online" flows unless explicitly approved for roadmap.
+
+Cursor MUST:
+- Reinforce the value prop: "Private AI, fully offline, you own it."
+- Assume paranoid users. Treat privacy as a feature we actively sell.
+- Write copy that is confident, minimal, and serious. No hype, no fluff, no 'lol', no cutesy tone.
+
+If a generated feature cannot be done fully offline, Cursor MUST clearly say:
+  "This would require external data and is not available offline."
+and mark the feature "(optional / future / requires external data)" in the UI instead of silently using the network.
+
+
+# -----------------------------------------------------------------------------
+# 1. PRE-RESPONSE SELF-CHECK (CRITICAL)
+# -----------------------------------------------------------------------------
+
+Before Cursor proposes code or changes, it MUST internally check the following and align its response accordingly:
+
+1. OFFLINE CHECK  
+   - Does this code or feature require internet access?  
+   - If yes, rewrite to be offline or explicitly label it as future/optional.
+
+2. PRIVACY CHECK  
+   - Does this code send or log user data anywhere outside the machine?  
+   - If yes, remove it or rewrite it to keep data local only.
+
+3. ARCHITECTURE FIT CHECK  
+   - Does this belong in `frontend/`, `backend/`, `src-tauri/`, `data/`, or `models/` according to our structure?  
+   - If not, pick the correct folder or explain why you're creating something new.
+
+4. DUPLICATION CHECK  
+   - Are we creating a new component / util that duplicates an existing one under a different name?  
+   - If yes, reuse or extend instead of duplicating.
+
+5. USER EXPERIENCE CHECK  
+   - Will a non-technical user understand this flow without docs?  
+   - If not, the UI must explain itself in one line of simple text near the control.
+
+6. DOCUMENTATION CHECK
+   - Does this file have the required docblock header?
+   - Are all functions and components properly documented?
+   - If not, add documentation before proceeding.
+
+7. TYPE SAFETY CHECK
+   - Are all TypeScript types properly defined?
+   - Is strict mode enabled and respected?
+   - If not, fix type issues before proceeding.
+
+Cursor MUST reflect these checks in its reasoning and output.  
+If any check fails, Cursor MUST revise the output automatically before presenting it.
+
+
+# -----------------------------------------------------------------------------
+# 2. ARCHITECTURE AND FILE OWNERSHIP RULES
+# -----------------------------------------------------------------------------
+
+Root project structure (authoritative):
+
+/offline-llm-appliance
+  /backend        → FastAPI backend & LLM runtime (Python)
+  /frontend       → React + TypeScript app shell + Tauri desktop layer
+    /src          → UI, state, config, utils
+    /src-tauri    → Rust + Tauri integration
+  /data           → Local user data, chat logs, uploaded context (NEVER commit secrets)
+  /models         → Local LLM .gguf files (NOT in git)
+
+Ownership:
+- React/TypeScript UI lives in `frontend/src`.
+- Frontend desktop runtime (Tauri, Rust, window lifecycle, backend boot) lives in `frontend/src-tauri`.
+- Models, quantized .gguf, etc. live in `/models` and are NEVER committed or in diffs.
+- Persistent user data lives in `/data`. We do NOT check real user data into git. We may include empty directories or README placeholders.
+
+Cursor MUST NOT:
+- Create new top-level directories without justification.
+- Create shadow copies of modules in multiple folders.
+- Rename existing folders casually. Folder naming is part of our public distribution and docs.
+
+When adding a new file:
+- State at the top of the file what it is, how it's used, and any privacy implications.
+- Use the correct naming convention (see below).
+- Include proper docblock header (see Section 5).
+
+
+# -----------------------------------------------------------------------------
+# 3. LANGUAGE-SPECIFIC STYLE RULES
+# -----------------------------------------------------------------------------
+
+## 3.1 React / TypeScript / Vite (frontend)
+
+- Only use `.tsx` for React components and `.ts` for utilities/stores/hooks.
+- All React components MUST be functional components with hooks. No class components.
+- All component props MUST be typed via `interface` or `type`.
+- Every component file MUST begin with a short docblock:
+
+  /**
+   * ComponentName.tsx
+   * What this component renders / controls.
+   * Where it is used.
+   * Privacy notes (if it reads/saves any local data).
+   */
+
+- UI state that is purely visual (isOpen, hover states, selected tab, step index, etc.) should live with the component via `useState`.
+- Conversation state, persistent settings, user config, etc. should live in Zustand stores in `frontend/src/store/`.
+- Reuse existing primitives:
+  - glass / translucent cards
+  - gradient headings
+  - button variants
+  - framer-motion easing curves (`cubic-bezier(0.23,1,0.32,1)`)
+  - Three.js boot/hero visual language
+- Don't inline massive walls of JSX if it can be cleanly composed from subcomponents.
+
+TypeScript Requirements:
+- MUST use `strict: true` in tsconfig.json
+- MUST define proper types for all props, state, and function parameters
+- MUST use `interface` for object types, `type` for unions/primitives
+- MUST avoid `any` type unless absolutely necessary
+- MUST use proper generic types for hooks and utilities
+
+Accessibility:
+- All clickable things must be focusable and have `aria-label` if the label isn't plain text.
+- Animated status, like "MONAD is thinking…", must use `aria-live="polite"` so screen readers can pick it up.
+- For modal-like components (wizard steps, command palette), ensure `Esc` closes it, and trap focus inside while open.
+
+Responsiveness:
+- Pages MUST function at ~1280x820 (desktop default window).
+- Aim to degrade gracefully down to ~375px. Don't intentionally break mobile layouts even if desktop is primary.
+
+Dark theme / brand:
+- Dark mode is default. High contrast. Deep blacks, electric blues, subtle violets.
+- Surfaces should feel cinematic and premium (glass layers, glow halos, subtle orbiting particles).
+- Avoid corporate dashboard / SaaS look. This is an AI core, not a CRM.
+
+Copy voice:
+- Quiet confidence.
+- "You own this."
+- "0 bytes leave your device."
+- Direct statements, not hype.
+
+No baby talk, no jokes, no "lol". This is not a toy.
+
+Framer Motion:
+- Use subtle motion, not bouncing cartoon animations.
+- Must not block usability. Boot animations and transitions should always have a safe timeout path.
+
+Three.js:
+- Only for hero/boot/visual system "core" elements. Never block interaction because of WebGL.
+- Provide a reasonable fallback state if WebGL fails.
+
+File naming:
+- Components: `PascalCase.tsx` (e.g. `SetupWizard.tsx`, `BootScreen.tsx`)
+- hooks/utils: `camelCase.ts` (e.g. `useHotkeys.ts`, `api.ts`)
+- Zustand stores: `camelCase.ts` in `src/store` (e.g. `chatStore.ts`)
+
+## 3.2 Zustand stores
+
+- All Zustand stores must have:
+  - initial state
+  - explicit action functions
+  - JSDoc/TS doc comments for each action describing what it mutates
+- No untyped `any` in state or actions.
+- Add persistence logic ONLY if it respects `config.savePreference`:
+  - "always" → write automatically
+  - "ask" → only on explicit user confirm
+  - "never" → no disk writes
+
+## 3.3 FastAPI (backend)
+
+- All backend routes live in `backend/routes/`.
+- Each file should define a FastAPI `APIRouter` and clearly documented endpoints.
+- Use Pydantic models for request and response bodies.
+- Each route MUST include a docstring at module and endpoint level explaining:
+  - Purpose
+  - Inputs
+  - Outputs
+  - Privacy constraints (MUST mention "never leaves the device")
+
+- NEVER send model input or output to logs unless and until we explicitly introduce a user-enabled debug mode. Default: log only operational status ("model loaded", "generation time", etc.) — never prompt content.
+
+- Absolutely no external network calls from inside inference or context ingestion. Everything we load (PDF, DOCX, TXT, etc.) is local only.
+
+- No async background internet downloads for models, unless we mark a future upgrade path. For now, models live in `/models` as .gguf.
+
+File naming:
+- snake_case: `generate.py`, `context.py`, `health.py`
+- Helper modules should be snake_case as well: `llm_runner.py`, `config.py`
+
+## 3.4 Rust / Tauri (desktop shell)
+
+- `frontend/src-tauri/src/main.rs` controls:
+  - booting the FastAPI backend on launch,
+  - window lifecycle,
+  - minimise-to-tray (instead of killing the backend),
+  - packaging resources for offline use.
+
+- Use Tauri v2 APIs only. Avoid deprecated v1 APIs like `get_window`. Use `get_webview_window` and `WindowEvent` correctly.
+
+- All process launches MUST be local. We launch our bundled Python backend via relative path.
+- Never add automatic calls to check for updates online, license checks, analytics, or similar.
+
+- If you make changes to `tauri.conf.json` you MUST:
+  - keep the productName "MONAD" and identifier "ai.monad.offline"
+  - keep the bundling of `../../backend` (and, if needed, `../../data`)
+  - preserve offline assumptions
+
+- Window behavior:
+  - On close: prevent app kill, hide window, keep backend alive.
+  - On relaunch: if backend is already running, do not spawn a duplicate.
+  - We must be able to run on macOS / Windows / Linux with no internet.
+
+## 3.5 Styles / assets
+
+- All assets must be local.
+- No hotlinking. No external fonts. No web analytics.
+- If adding images/renders/video/audio:
+  - Put them in a clear local assets directory (e.g. `frontend/src/assets/`).
+  - Optimise size and format (webp, mp4 with sane bitrate, svg for logos).
+  - Provide descriptive `alt` text for any marketing or explainers.
+- If adding sounds (startup chime, click), default volume should be low, and surfaces must include a mute toggle in Settings (even if Settings is not fully built yet).
+
+## 3.6 Git hygiene
+
+Cursor MUST:
+- Not commit build artifacts:
+  - `frontend/dist/`
+  - `frontend/src-tauri/target/`
+  - `node_modules/`
+  - `backend/venv/`
+  - `backend/__pycache__/`
+  - `.dmg`, `.msi`, `.deb`, compiled bundles
+  - model binaries in `/models/*.gguf`
+- Not create "copy of X" or "_backup.tsx" files. If we're replacing something, we replace it cleanly in-place.
+- Keep diffs small and reviewable. Don't rewrite entire files unless we truly are replacing them.
+
+
+# -----------------------------------------------------------------------------
+# 4. USER EXPERIENCE / PRODUCT RULES
+# -----------------------------------------------------------------------------
+
+This section controls how MONAD feels. Cursor MUST follow this when generating UI, copy, flows, or visuals.
+
+## 4.1 Boot sequence
+
+- On app start, we show a cinematic boot screen:
+  - 3D animated core / rotating object / pulse ring
+  - Gentle startup audio (local, not streamed)
+  - Text like: "Booting neural core… Initialising local model… Secure offline environment detected."
+- Boot MUST always have a fallback timeout (example: after ~3-5 seconds, continue even if some visuals lag).
+- Boot must feel like: "This is YOUR AI core starting up," not "loading web app."
+
+## 4.2 Onboarding wizard (first run)
+
+The Setup Wizard MUST:
+- Ask for the user's name (e.g. "What should I call you?")
+- Ask how MONAD should behave (role presets like Professional Assistant / Creative Partner / Developer Companion / Legal Analyst / General AI, etc.)
+- Ask tone (Professional / Friendly / Technical / Creative / Concise, with short blurbs)
+- Ask language preference
+- Ask personal goal ("What do you want me to help you achieve?")
+- Ask interests (multi-select tag chips, must be removable before confirm)
+- Ask theme (Dark / Dim / Midnight / Light variants)
+- Ask security level:
+  - "Standard" (fast, no password) vs
+  - "Secure" (locked / password-protected / encrypted storage roadmap)
+- Ask save mode:
+  - "Always save locally"
+  - "Ask me before saving"
+  - "Never save anything"
+
+At the end:
+- Show a summary card of what they chose (in simple human language).
+- Confirm and continue to Dashboard.
+- Store the config in localStorage/config store so the assistant can refer to the user by name and behave according to that profile.
+
+We do NOT:
+- Ask for email.
+- Ask them to create an account.
+- Ask them to "sign up for updates."
+- Ask anything that implies cloud involvement.
+- Ask about "mood" or "energy." Those are removed.
+
+Everything here should feel calm, intentional, cinematic — not growth-hack-y.
+
+## 4.3 Dashboard / main shell
+
+The Dashboard after onboarding MUST:
+- Greet the user by name ("Welcome back, Joseph.").
+- Show privacy badge ("Offline / Private / Local Model Active").
+- Provide access points to:
+  - Chat
+  - Context / files they've imported locally
+  - Settings (theme / privacy / save prefs / model selection)
+  - (Future) Packs / specialized models
+
+It should feel like an AI control centre, not a marketing site and not a Slack clone.
+
+## 4.4 Chat interface
+
+Chat MUST include:
+- Message stream (user + assistant)
+- Input box with send
+- Typing indicator / thinking indicator (animated dots, "MONAD is thinking…" with aria-live)
+- Answer style controls (Concise / Detailed / Technical / Creative)
+- Reasoning mode toggle (Normal vs Deep; we respect this in the prompt we send to the backend)
+- Context meter / token bar: visual indicator of how "full" the current context/session is
+- A visible privacy badge or statement reminding the user the chat is local
+- Command Palette (Ctrl+K / Cmd+K) with:
+  - Export conversation
+  - Import reference material (PDF / DOCX / TXT → /data/context)
+  - Clear conversation
+  - Switch model (once we ship more than one)
+  - View privacy status
+  - Open settings
+
+Persistence:
+- We MUST respect `savePreference`:
+  - "always": persist to disk in `/data/`
+  - "ask": prompt on exit or manual save
+  - "never": keep in memory only
+- When saving/exporting conversation:
+  - Save to a local text/JSON file with timestamp, clearly named.
+  - Never upload it or suggest sharing it.
+
+When backend is offline / model not loaded:
+- Chat MUST show a graceful fallback message:
+  "Local model is not running. Please relaunch MONAD or check model location."
+- Do NOT say "check your internet." That's not how MONAD works.
+
+## 4.5 Trust / Proof / Credibility
+
+Throughout UI and marketing surfaces, we MUST surface:
+- "0 bytes leave your device."
+- "No subscription."
+- "Works on a plane, in a cabin, in an air-gapped lab."
+- "Yours. Not rented."
+- Performance numbers (tokens/sec, parameter sizes).
+- Security signals (local encryption roadmap, isolation, optional password lock).
+- Real-world scenarios (journalists, founders, lawyers, researchers, etc. using it offline).
+
+This is part of conversion and part of onboarding trust.
+
+## 4.6 Copy / voice rules
+
+Tone:
+- Calm, respectful, self-assured.
+- We are not begging for trust; we embody it.
+- No cringe startup slang.
+- No fake urgency tricks.
+
+Structure:
+- Lead with "what it is."
+- Immediately follow with "why it matters to you personally."
+- Provide one proof line ("0 bytes leave your device." / "One-time purchase. No SaaS lock-in.").
+
+Examples of correct style:
+- "Your intelligence. Stored locally. Fully offline."
+- "No cloud. No subscription. No surveillance."
+- "Ask anything. Nothing leaves this device."
+
+Examples to avoid:
+- "This is next-gen super insane wow omg!!!"
+- "We totally respect your privacy 100% pinky promise 🥺💕"
+
+
+# -----------------------------------------------------------------------------
+# 5. TESTABILITY, DOCS, AND COMMENTING
+# -----------------------------------------------------------------------------
+
+Every new file MUST start with a short docblock that explains:
+1. What the file/component/module does.
+2. Where it is used in the app.
+3. Any privacy implications (does it read/write local data? handle user config? etc.).
+4. Any OS/platform specifics (e.g. macOS menu bar behavior).
+
+For backend routes:
+- Include Pydantic request/response models if we exchange structured data.
+- Add example request/response in the docstring.
+- Explicitly say: "All processing is local. No data is transmitted externally."
+
+For frontend flows:
+- Document assumptions.  
+  Example:  
+  "This wizard stores user config in localStorage under the `monadConfig` key.  
+   No data leaves the device.  
+   This config is later used to personalize assistant tone and greeting."
+
+For Rust / Tauri code:
+- Document what processes are spawned, and how we handle close/minimise events.
+- Document how the backend path is resolved (relative to `../../backend`).
+- Document any cross-platform edge cases.
+
+Cursor MUST:
+- Avoid adding code without explaining how (or whether) it's tested or testable.
+- When proposing a new component that interacts with other layers (frontend ↔ backend ↔ Tauri), explain the lifecycle in comments:
+  - who calls it,
+  - when,
+  - what the failure modes are.
+
+Cursor SHOULD:
+- Where meaningful, add runtime guards and helpful console warnings instead of failing silently.
+
+
+# -----------------------------------------------------------------------------
+# 6. CODE QUALITY AND COMPLIANCE RULES
+# -----------------------------------------------------------------------------
+
+## 6.1 TypeScript Compliance
+- MUST use `strict: true` in tsconfig.json
+- MUST define proper types for all props, state, and function parameters
+- MUST use `interface` for object types, `type` for unions/primitives
+- MUST avoid `any` type unless absolutely necessary
+- MUST use proper generic types for hooks and utilities
+- MUST enable `noUnusedLocals` and `noUnusedParameters` in production
+
+## 6.2 Component Documentation
+- EVERY React component MUST have a docblock header
+- EVERY function MUST have JSDoc comments
+- EVERY prop interface MUST be documented
+- EVERY state variable MUST have a comment explaining its purpose
+
+## 6.3 Version Management
+- MUST keep versions synchronised across all config files
+- MUST update version numbers in both `tauri.conf.json` and `Cargo.toml`
+- MUST use semantic versioning (major.minor.patch)
+
+## 6.4 File Cleanup
+- MUST remove redundant files identified in audit
+- MUST not commit build artifacts or cache files
+- MUST use the cleanup script before major commits
+- MUST maintain clean project structure
+
+## 6.5 Error Handling
+- MUST provide graceful fallbacks for all operations
+- MUST log errors appropriately (no sensitive data)
+- MUST handle offline scenarios properly
+- MUST provide user-friendly error messages
+
+## 6.6 Performance Standards
+- MUST maintain <3 second response times for 7B models
+- MUST use proper loading states and progress indicators
+- MUST implement proper memory management
+- MUST optimise bundle sizes and asset loading
+
+
+# -----------------------------------------------------------------------------
+# 7. ROADMAP HOOKS (FUTURE FEATURES)
+# -----------------------------------------------------------------------------
+
+We are building hooks for:
+- Model selection UI (e.g. TinyLlama / Phi-3 / larger models)
+- Specialized "packs" (legal pack, founder pack, research pack) — still offline
+- PDF/DOCX/TXT ingestion for local context memory
+- Optional encrypted secure mode
+- Tray-resident quick-ask mini window
+- Local-only summarization of imported documents
+- Cross-platform distribution (macOS app / Windows .msi / Linux .deb)
+- External SSD "plug-and-play intelligence core" that just boots on any machine
+
+Cursor MUST:
+- Architect code so these hooks can land cleanly.
+- Make it obvious which pieces are "shipping now" vs "coming soon (local, offline feature)".
+- Never silently pretend that "cloud mode" exists.
+- Never suggest "log in to unlock more," unless we explicitly add a local-only license unlock mechanic later.
+
+If Cursor is asked to build something that touches these roadmap hooks (like "Add a model switcher to the dashboard"), Cursor MUST:
+- Add a UI control that's functional where possible,
+- If not functional yet, clearly label as "Coming Soon" instead of leaving a broken control.
+
+
+# -----------------------------------------------------------------------------
+# 8. MERGE / REFRACTOR / SAFETY RULES
+# -----------------------------------------------------------------------------
+
+Cursor MUST:
+- Keep diffs scoped: update only the necessary files and sections.
+- Refrain from mass-renaming modules or reorganizing directories unless explicitly asked.
+- Before replacing or deleting code, explain what is being removed and why it is safe.
+
+When editing existing files:
+- Preserve working behavior in Tauri, backend startup, and onboarding unless explicitly asked to change them.
+- Do not strip out security/privacy messaging from UI or docs.
+- Do not regress accessibility (focus states, aria labels, keyboard escape behavior).
+
+When generating new assets (images, audio, video placeholders):
+- Use local relative paths under `frontend/src/assets/`.
+- Use performant formats (webp, mp4, svg).
+- Provide alt text.
+- Never hotlink or embed from remote URLs.
+
+When generating marketing-facing pages/sections (homepage, product page, packs, specs, manifesto, press, support, etc.):
+- You MUST include social proof, proof of privacy, and proof of performance.
+- You MUST include clear CTAs ("Reserve Your MONAD", "Watch Demo", "Get Help", etc.).
+- You MUST structure long pages with digestible sections, each with a headline, supporting line, proof/value, and optional CTA.
+
+
+# -----------------------------------------------------------------------------
+# 9. AUDIT COMPLIANCE RULES
+# -----------------------------------------------------------------------------
+
+Based on the comprehensive project audit (PROJECT_AUDIT_REPORT.md), Cursor MUST:
+
+## 9.1 Immediate Compliance Actions
+- MUST add docblocks to all 11 React components
+- MUST re-enable TypeScript strict mode
+- MUST synchronise versions between tauri.conf.json and Cargo.toml
+- MUST run cleanup script to remove redundant files
+
+## 9.2 Quality Assurance
+- MUST maintain 92/100 compliance score
+- MUST address all "NEEDS ATTENTION" items from audit
+- MUST preserve "EXCELLENT PRACTICES" identified in audit
+- MUST maintain production readiness status
+
+## 9.3 Documentation Standards
+- MUST document all new components before implementation
+- MUST maintain comprehensive API documentation
+- MUST update README files when adding new features
+- MUST include privacy implications in all documentation
+
+## 9.4 Performance Monitoring
+- MUST maintain <3 second response times
+- MUST keep bundle sizes under 70MB total
+- MUST monitor memory usage and optimize as needed
+- MUST ensure cross-platform compatibility
+
+
+# -----------------------------------------------------------------------------
+# 10. SUMMARY / IDENTIFICATION
+# -----------------------------------------------------------------------------
+
+Cursor MUST remember:
+- MONAD is a self-contained offline AI core.
+- It runs locally on a physical SSD / desktop app with no dependence on cloud LLMs.
+- We are building a B2C product: "private AI for everyone," with upgrade paths for specialists (legal, founder, research packs, etc.).
+- We DO NOT do subscriptions. We DO NOT do surveillance. We DO NOT do accounts.
+
+Everything — onboarding, chat, dashboard, marketing site, support docs — must reflect those truths.
+
+This is not a demo.
+This is not a toy.
+This is the personal AI you actually own.
+
+Cursor MUST act accordingly and maintain the highest standards of code quality, documentation, and compliance as established in this comprehensive rule set.
