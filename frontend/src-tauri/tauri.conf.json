@@ -1,0 +1,48 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "MONAD",
+  "version": "1.0.0",
+  "identifier": "ai.monad.offline",
+  "build": {
+    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run dev",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "MONAD",
+        "width": 1280,
+        "height": 820,
+        "resizable": true,
+        "fullscreen": false,
+        "minWidth": 1024,
+        "minHeight": 600,
+        "devtools": true
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self' tauri: asset: blob: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' tauri: asset: blob:; style-src 'self' 'unsafe-inline' tauri: asset: blob:; font-src 'self' data: tauri: asset:; img-src 'self' data: blob: tauri: asset:; connect-src 'self' tauri: asset: ipc: http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*;"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg", "msi", "deb"],
+    "resources": [
+      "../dist/**",
+      "../../backend"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "copyright": "MONAD v1.0.0 - Secure Offline AI Platform",
+    "category": "DeveloperTool",
+    "shortDescription": "Secure, Personalized & Professional Offline AI Platform",
+    "longDescription": "MONAD is a production-grade, secure, personalized offline AI platform that transforms your computer into an intelligent operating system."
+  }
+}
