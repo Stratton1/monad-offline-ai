@@ -3,7 +3,7 @@
 
 MODELS_DIR="$HOME/Library/Application Support/ai.monad.offline/models"
 MODEL_FILE="phi-3-medium-128k-instruct-q4_k_m.gguf"
-MODEL_URL="https://huggingface.co/microsoft/Phi-3-medium-128k-instruct-gguf/resolve/main/Phi-3-medium-128k-instruct-Q4_K_M.gguf"
+MODEL_URL="https://huggingface.co/bartowski/Phi-3-medium-128k-instruct-GGUF/resolve/main/Phi-3-medium-128k-instruct-Q4_K_M.gguf"
 
 echo "📦 Downloading Phi-3 Medium 128K Instruct (Q4_K_M) model for MONAD..."
 echo "📁 Target directory: $MODELS_DIR"
