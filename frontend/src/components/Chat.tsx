@@ -323,9 +323,6 @@ const Chat: React.FC<ChatProps> = ({ config }) => {
         onClearHistory={() => {
           clearMessages();
         }}
-        onSwitchModel={(model) => {
-          console.log('Switching to model:', model);
-        }}
         onToggleReasoning={() => {
           setReasoning(reasoning === "standard" ? "deep" : "standard");
         }}

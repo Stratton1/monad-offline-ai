@@ -14,7 +14,6 @@ interface CommandPaletteProps {
   onClose: () => void;
   onExportChat?: () => void;
   onClearHistory?: () => void;
-  onSwitchModel?: (model: string) => void;
   onToggleReasoning?: () => void;
 }
 
@@ -68,7 +67,6 @@ export default function CommandPalette({
   onClose, 
   onExportChat, 
   onClearHistory, 
-  onSwitchModel, 
   onToggleReasoning 
 }: CommandPaletteProps) {
   const [query, setQuery] = useState("");
