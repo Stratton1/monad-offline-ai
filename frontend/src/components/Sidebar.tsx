@@ -154,7 +154,7 @@ function Sidebar({ isConnected = true, onReconnect = () => {}, config }: Sidebar
               <HardDrive className="w-4 h-4 text-purple-400" />
               <span className="text-gray-400">Model</span>
             </div>
-            <span className="text-gray-300">TinyLlama</span>
+            <span className="text-gray-300">Phi-3 Medium</span>
           </div>
         </div>
       </div>

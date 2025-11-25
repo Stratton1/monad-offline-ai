@@ -17,13 +17,14 @@ class Config:
     # Model configuration
     ensure_app_dirs()
     _models_dir = get_models_dir()
+    MODEL_FILENAME = "phi-3-medium-128k-instruct-q4_k_m.gguf"
     _env_model = os.getenv("MODEL_PATH")
     if _env_model:
         _model_candidate = Path(_env_model)
         MODEL_PATH = str(_model_candidate if _model_candidate.is_absolute() else _models_dir / _model_candidate)
     else:
-        MODEL_PATH = str(_models_dir / "tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf")
-    MODEL_CONTEXT_SIZE = int(os.getenv("CONTEXT_LENGTH", "2048"))
+        MODEL_PATH = str(_models_dir / MODEL_FILENAME)
+    MODEL_CONTEXT_SIZE = int(os.getenv("CONTEXT_LENGTH", "4096"))
     MODEL_N_THREADS = int(os.getenv("MODEL_N_THREADS", "4"))
     
     # Server configuration

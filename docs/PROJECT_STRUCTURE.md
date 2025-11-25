@@ -26,7 +26,7 @@
 │   └── 📄 MONAD_Pitch_Deck_Structure.pdf # PDF pitch deck structure
 │
 ├── 📁 models/                            # AI Model Storage
-│   └── 📄 tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf # TinyLlama 1.1B model (700MB)
+│   └── 📄 tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf # Phi-3 Medium 1.1B model (700MB)
 │
 ├── 📄 MONAD_BACKUP_20251026_0235.zip    # Project backup archive
 ├── 📄 PROJECT_STATUS_AUDIT.md           # Current project status audit
@@ -339,7 +339,7 @@ rm "INVESTMENT DOCS/MONAD_Executive_Summary.docx"
 - **Configuration**: Tauri, Rust, Node.js configs
 - **Documentation**: README, setup guides
 - **Investment Docs**: Business plan, pitch materials
-- **AI Model**: TinyLlama GGUF file (700MB)
+- **AI Model**: Phi-3 Medium GGUF file (700MB)
 
 ---
 

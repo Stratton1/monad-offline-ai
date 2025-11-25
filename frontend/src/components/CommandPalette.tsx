@@ -38,12 +38,6 @@ const commands = [
     action: "import"
   },
   {
-    id: "switch-model",
-    title: "Switch Model",
-    description: "Toggle between TinyLlama / Phi-3",
-    action: "model"
-  },
-  {
     id: "toggle-reasoning",
     title: "Toggle Reasoning",
     description: "Change reasoning depth",
@@ -149,14 +143,6 @@ export default function CommandPalette({
           }
         };
         input.click();
-        break;
-      case "model":
-        const currentConfig = loadConfig();
-        const newModel = currentConfig?.selectedModel === "TinyLlama" ? "Phi-3" : "TinyLlama";
-        if (currentConfig) {
-          saveConfig({ ...currentConfig, selectedModel: newModel });
-        }
-        onSwitchModel?.(newModel);
         break;
       case "reasoning":
         const config = loadConfig();

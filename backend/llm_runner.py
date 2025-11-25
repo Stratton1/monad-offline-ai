@@ -1,6 +1,6 @@
 """
 File: llm_runner.py
-Purpose: LLM runner using llama.cpp for TinyLlama model execution
+Purpose: LLM runner using llama.cpp for Phi-3 Medium model execution
 """
 
 import asyncio
@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class LLMRunner:
-    """LLM runner class for handling TinyLlama model operations"""
+    """LLM runner class for handling Phi-3 Medium model operations"""
     
     def __init__(self, model_path: str):
         """

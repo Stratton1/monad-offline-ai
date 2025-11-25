@@ -56,10 +56,14 @@ def check_model_file():
     # Try to load from environment
     try:
         from dotenv import load_dotenv
+        from paths import get_models_dir
         load_dotenv()
-        model_path = os.getenv("MODEL_PATH", "/Users/joseph/OfflineLLM/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf")
+        models_dir = get_models_dir()
+        default_model = str(models_dir / "phi-3-medium-128k-instruct-q4_k_m.gguf")
+        model_path = os.getenv("MODEL_PATH", default_model)
     except:
-        model_path = "/Users/joseph/OfflineLLM/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+        # Fallback to standard macOS path
+        model_path = os.path.expanduser("~/Library/Application Support/ai.monad.offline/models/phi-3-medium-128k-instruct-q4_k_m.gguf")
     
     if os.path.exists(model_path):
         file_size = os.path.getsize(model_path) / (1024 * 1024)  # MB

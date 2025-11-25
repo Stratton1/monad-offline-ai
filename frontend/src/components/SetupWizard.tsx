@@ -326,7 +326,7 @@ export default function SetupWizard({ onComplete }: SetupWizardProps) {
         userName: name,
         reasoningLevel: 'standard',
         typingIndicator: true,
-        selectedModel: 'TinyLlama',
+        selectedModel: 'Phi-3 Medium',
         autosave: resolvedSavePreference === 'always',
         idleLockMinutes,
       });

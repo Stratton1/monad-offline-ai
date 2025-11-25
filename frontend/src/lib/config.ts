@@ -41,7 +41,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   userName: "",
   reasoningLevel: "standard",
   typingIndicator: true,
-  selectedModel: "TinyLlama",
+  selectedModel: "Phi-3 Medium",
   autosave: false,
   idleLockMinutes: 15,
 };

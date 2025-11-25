@@ -34,7 +34,7 @@
 
 ### **Backend Stack**
 - **Framework**: FastAPI (Python 3.11+)
-- **AI Models**: TinyLlama 1.1B, Phi-3
+- **AI Models**: Phi-3 Medium 1.1B, Phi-3
 - **Inference**: llama.cpp with Metal acceleration
 - **Storage**: Local JSON persistence
 - **API**: RESTful endpoints with CORS

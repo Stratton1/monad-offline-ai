@@ -241,7 +241,7 @@ MONAD is a complete offline AI system consisting of integrated hardware and soft
 - 70B parameter models: Requires Enterprise GPU configuration
 
 **Quality Metrics**:
-- TinyLlama (1.1B): Basic tasks, coding assistance
+- Phi-3 Medium (1.1B): Basic tasks, coding assistance
 - Mistral-7B: Professional-grade responses, complex reasoning
 - Llama 3-70B: Near-GPT-4 quality (requires Enterprise config)
 

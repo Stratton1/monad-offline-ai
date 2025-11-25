@@ -1,22 +1,44 @@
 # Model Setup Instructions
 
-## Download TinyLlama Model
+## Download Phi-3 Medium 128K Instruct Model
 
-To run MONAD, you need to download the TinyLlama model file. Here are the steps:
+To run MONAD, you need to download the Phi-3 Medium model file. Here are the steps:
 
-### Option 1: Direct Download (Recommended)
+### Option 1: Using Provided Script (Recommended)
+
+```bash
+# Navigate to backend directory
+cd backend
+
+# Make script executable
+chmod +x download_model.sh
+
+# Run the download script
+./download_model.sh
+```
+
+The script will:
+- Create the models directory if it doesn't exist (`~/Library/Application Support/ai.monad.offline/models/`)
+- Download Phi-3 Medium 128K Instruct (Q4_K_M quantization) from Hugging Face
+- Verify the download
+- Display model information
+
+**Expected download time:** 15-30 minutes depending on your internet connection  
+**File size:** ~8.5GB
+
+### Option 2: Direct Download
 
 ```bash
 # Create models directory (if not exists)
-mkdir -p /Users/joseph/OfflineLLM/models
+mkdir -p ~/Library/Application\ Support/ai.monad.offline/models
 
-# Download TinyLlama model (Q4_K_M quantization - good balance of size/quality)
-cd /Users/joseph/OfflineLLM/models
-curl -L -o tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf \
-  "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
+# Download Phi-3 Medium model (Q4_K_M quantization - optimal balance of size/quality)
+cd ~/Library/Application\ Support/ai.monad.offline/models
+curl -L -o phi-3-medium-128k-instruct-q4_k_m.gguf \
+  "https://huggingface.co/microsoft/Phi-3-medium-128k-instruct-gguf/resolve/main/Phi-3-medium-128k-instruct-Q4_K_M.gguf"
 ```
 
-### Option 2: Using Hugging Face CLI
+### Option 3: Using Hugging Face CLI
 
 ```bash
 # Install huggingface-hub if not already installed
@@ -26,65 +48,112 @@ pip install huggingface-hub
 python -c "
 from huggingface_hub import hf_hub_download
 hf_hub_download(
-    repo_id='TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF',
-    filename='tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf',
-    local_dir='/Users/joseph/OfflineLLM/models'
+    repo_id='microsoft/Phi-3-medium-128k-instruct-gguf',
+    filename='Phi-3-medium-128k-instruct-Q4_K_M.gguf',
+    local_dir='~/Library/Application Support/ai.monad.offline/models',
+    local_dir_use_symlinks=False
 )
 "
 ```
 
-### Option 3: Manual Download
+### Option 4: Manual Download
 
-1. Visit: https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF
-2. Download `tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf`
-3. Place it in `/Users/joseph/OfflineLLM/models/`
+1. Visit: https://huggingface.co/microsoft/Phi-3-medium-128k-instruct-gguf
+2. Download `Phi-3-medium-128k-instruct-Q4_K_M.gguf`
+3. Place it in `~/Library/Application Support/ai.monad.offline/models/`
 
 ## Verify Installation
 
 After downloading, verify the model file:
 
 ```bash
-ls -la /Users/joseph/OfflineLLM/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf
+ls -lh ~/Library/Application\ Support/ai.monad.offline/models/phi-3-medium-128k-instruct-q4_k_m.gguf
 ```
 
-The file should be approximately 637MB in size.
+The file should be approximately **8.5GB** in size.
 
-## Alternative Models
+You can also verify the model loads correctly:
 
-You can also use other GGUF models by updating the `MODEL_PATH` in your `.env` file:
+```bash
+cd backend
+source venv/bin/activate
+python main.py
+```
 
-- **TinyLlama Q4_K_M**: `tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf` (637MB)
-- **TinyLlama Q8_0**: `tinyllama-1.1b-chat-v1.0.Q8_0.gguf` (1.1GB) - Better quality
-- **TinyLlama Q2_K**: `tinyllama-1.1b-chat-v1.0.Q2_K.gguf` (448MB) - Smaller size
+You should see:
+```
+INFO:monad-backend:🚀 Starting MONAD backend...
+INFO:monad-backend:📦 Loading model from: .../phi-3-medium-128k-instruct-q4_k_m.gguf
+INFO:llm_runner:🔄 Initializing LLM from: .../phi-3-medium-128k-instruct-q4_k_m.gguf
+INFO:llm_runner:✅ LLM initialized successfully
+INFO:monad-backend:✅ Model loaded successfully
+```
+
+## Model Specifications
+
+**Phi-3 Medium 128K Instruct (Q4_K_M)**
+
+- **Parameters:** 14 billion (4-bit quantized)
+- **Context Window:** 128,000 tokens
+- **Quantization:** Q4_K_M (4-bit mixed quantization)
+- **File Size:** ~8.5GB
+- **RAM Required:** Minimum 8GB (16GB+ recommended)
+- **Inference Speed:** ~5-15 tokens/second on modern CPUs
+- **Use Case:** Strong reasoning, writing, analysis, and general conversation
+
+## Model Paths
+
+MONAD expects the model in these locations (platform-dependent):
+
+- **macOS:** `~/Library/Application Support/ai.monad.offline/models/`
+- **Windows:** `%APPDATA%\ai.monad.offline\models\`
+- **Linux:** `~/.local/share/ai.monad.offline/models/`
+
+The backend will automatically detect the correct path for your platform.
 
 ## Troubleshooting
 
-### Model Not Found Error
-If you get a "Model file not found" error:
-1. Check the file path in your `.env` file
-2. Ensure the file exists: `ls -la /Users/joseph/OfflineLLM/models/`
-3. Verify file permissions: `chmod 644 /Users/joseph/OfflineLLM/models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf`
+### Model Not Found
 
-### Download Issues
-If the download fails:
-1. Check your internet connection
-2. Try using a VPN if in a restricted region
-3. Use the manual download option from Hugging Face website
-4. Try a different quantization (Q2_K for smaller size)
+If you see "Model file not found" errors:
 
-### Memory Issues
-If you experience memory issues:
-1. Use Q2_K quantization for lower memory usage
-2. Reduce `MODEL_CONTEXT_SIZE` in `.env` (try 1024)
-3. Reduce `MODEL_N_THREADS` in `.env` (try 2)
+1. Verify the model exists in the correct directory
+2. Check file permissions: `chmod 644 <model_file>`
+3. Ensure the filename is correct (lowercase, no spaces)
+4. Restart the backend after downloading
 
-## Next Steps
+### Out of Memory
 
-Once the model is downloaded:
-1. Copy `env` to `.env`: `cp env .env`
-2. Start the application: `npm run tauri:dev`
-3. The backend will automatically load the model on startup
+If the model fails to load due to memory:
 
----
+1. Close other applications to free RAM
+2. Ensure you have at least 8GB RAM available
+3. Consider using TinyLlama (1.1B) for lower-end hardware (not recommended for production)
 
-**MONAD Offline AI v1.0.0 — "Untethered Intelligence"
+### Slow Inference
+
+If generation is very slow:
+
+1. Reduce `MODEL_N_THREADS` in `backend/env.example`
+2. Ensure no other CPU-intensive processes are running
+3. Consider upgrading RAM or CPU
+
+## Alternative Models
+
+While MONAD is optimized for Phi-3 Medium, you can use other GGUF models by setting the `MODEL_PATH` environment variable:
+
+```bash
+export MODEL_PATH="/path/to/your/model.gguf"
+```
+
+Compatible formats:
+- Any GGUF quantized model
+- Context size should be at least 2048 tokens
+- Q4_K_M or Q5_K_M quantization recommended
+
+## Support
+
+For model-related issues:
+- Check the [Troubleshooting Guide](../README.md#-troubleshooting)
+- Open a [GitHub Issue](https://github.com/Stratton1/monad-offline-ai/issues)
+- Join [GitHub Discussions](https://github.com/Stratton1/monad-offline-ai/discussions)

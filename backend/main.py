@@ -68,7 +68,7 @@ async def lifespan(app: FastAPI):
 # Create FastAPI app
 app = FastAPI(
     title="MONAD Offline AI Backend",
-    description="FastAPI backend for running TinyLlama locally",
+    description="FastAPI backend for running Phi-3 Medium 128K Instruct (Q4_K_M) locally",
     version="1.0.0",
     lifespan=lifespan
 )

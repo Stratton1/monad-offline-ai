@@ -96,7 +96,7 @@ The MONAD offline AI platform is **largely ready** for Alpha build with **minor 
 
 #### Configuration Requirements
 - ⚠️ **Model path:** Backend requires MODEL_PATH environment variable or default model
-  - **Default:** `tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf` in models directory
+  - **Default:** `phi-3-medium-128k-instruct-q4_k_m.gguf` in models directory
   - **Impact:** High if model not present (backend won't start)
   - **Action Required:** Ensure model is bundled or documented for Alpha users
 
