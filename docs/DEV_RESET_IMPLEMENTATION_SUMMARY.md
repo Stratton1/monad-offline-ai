@@ -157,9 +157,13 @@ dirs = "5.0"  # For cross-platform data directory resolution
 
 **Removed:**
 - `data/` - All user data, context, chats
-- `models/` - **⚠️ Including LLM model files (8GB Phi-3)**
+- All config files and directories
 
-**Effect:** Complete clean slate, as if app was just installed
+**Preserved:**
+- `models/` - **✅ LLM model files (8GB Phi-3) are PRESERVED**
+- No need to re-download models after reset
+
+**Effect:** Clean onboarding state while keeping downloaded models intact
 
 ---
 

@@ -258,7 +258,7 @@ export default function BootScreen({ onComplete }: { onComplete: () => void }) {
               console.log("[DevReset] Reset button clicked");
               void devResetApp();
             }}
-            title="Wipe all local data and restart (Dev Mode Only)"
+            title="Reset config & onboarding (preserves models) - Dev Mode Only"
           >
             🔄 Reset App
             <span className="ml-1 text-red-500/60">(Dev)</span>

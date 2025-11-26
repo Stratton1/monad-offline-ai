@@ -186,18 +186,69 @@ fn dev_reset_app() -> Result<(), String> {
     use std::io::ErrorKind;
     use dirs::data_dir;
 
-    let dir = data_dir()
+    let app_dir = data_dir()
         .ok_or_else(|| "Cannot resolve data directory".to_string())?
         .join("ai.monad.offline");
 
-    match fs::remove_dir_all(&dir) {
-        Ok(_) => (),
-        Err(err) if err.kind() == ErrorKind::NotFound => (),
-        Err(err) => return Err(format!("Failed to remove data directory: {}", err)),
+    // If directory doesn't exist, create it and we're done
+    if !app_dir.exists() {
+        fs::create_dir_all(&app_dir)
+            .map_err(|err| format!("Failed to create data directory: {}", err))?;
+        return Ok(());
     }
 
-    fs::create_dir_all(&dir).map_err(|err| format!("Failed to recreate data directory: {}", err))?;
-
+    // Preserve models directory by selectively deleting other items
+    let models_dir = app_dir.join("models");
+    
+    println!("🔄 Dev reset: clearing app data (preserving models/)...");
+    
+    // Read all entries in the app directory
+    match fs::read_dir(&app_dir) {
+        Ok(entries) => {
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    let path = entry.path();
+                    let is_models_dir = path.file_name()
+                        .and_then(|n| n.to_str())
+                        .map(|s| s == "models")
+                        .unwrap_or(false);
+                    
+                    // Skip the models directory
+                    if is_models_dir {
+                        println!("   ✓ Preserving models/ directory");
+                        continue;
+                    }
+                    
+                    // Delete everything else
+                    if path.is_dir() {
+                        match fs::remove_dir_all(&path) {
+                            Ok(_) => println!("   ✓ Removed: {:?}", path.file_name()),
+                            Err(e) => eprintln!("   ⚠️  Could not remove {:?}: {}", path.file_name(), e),
+                        }
+                    } else {
+                        match fs::remove_file(&path) {
+                            Ok(_) => println!("   ✓ Removed: {:?}", path.file_name()),
+                            Err(e) => eprintln!("   ⚠️  Could not remove {:?}: {}", path.file_name(), e),
+                        }
+                    }
+                }
+            }
+        }
+        Err(err) if err.kind() == ErrorKind::NotFound => {
+            // Directory doesn't exist, create it
+            fs::create_dir_all(&app_dir)
+                .map_err(|err| format!("Failed to create data directory: {}", err))?;
+        }
+        Err(err) => return Err(format!("Failed to read data directory: {}", err)),
+    }
+    
+    // Ensure the models directory exists (in case it was never created)
+    if !models_dir.exists() {
+        fs::create_dir_all(&models_dir)
+            .map_err(|err| format!("Failed to create models directory: {}", err))?;
+    }
+    
+    println!("✅ Dev reset complete (models/ preserved)");
     Ok(())
 }
 
