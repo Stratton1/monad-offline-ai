@@ -37,31 +37,52 @@ async def health_check(
         Health status with system and LLM information
     """
     try:
-        # Get system information
+        # Get system information (non-blocking)
         system_info = {
-            "cpu_percent": psutil.cpu_percent(interval=1),
+            "cpu_percent": psutil.cpu_percent(interval=0.1),  # Faster check
             "memory_percent": psutil.virtual_memory().percent,
             "disk_usage": psutil.disk_usage('/').percent,
             "process_count": len(psutil.pids()),
             "platform": os.uname().sysname if hasattr(os, 'uname') else "unknown"
         }
         
-        # Get LLM status
+        # Get LLM status with defensive error handling
         llm_status = {}
+        overall_status = "healthy"
+        
         if llm_runner:
-            llm_status = llm_runner.get_status()
+            try:
+                llm_status = llm_runner.get_status()
+                
+                # Check if model is still initializing
+                if hasattr(llm_runner, 'is_initializing') and llm_runner.is_initializing:
+                    overall_status = "booting"
+                    llm_status["message"] = "Loading Phi-3 Medium… this may take several minutes."
+                elif not llm_status.get("initialized", False):
+                    overall_status = "degraded"
+                    llm_status["message"] = "Model not loaded. Backend is operational but inference is unavailable."
+                    
+            except Exception as status_error:
+                logger.warning(f"⚠️ Error getting LLM status: {status_error}")
+                llm_status = {
+                    "initialized": False,
+                    "model_path": None,
+                    "model_exists": False,
+                    "error": str(status_error),
+                    "message": "LLM status check failed"
+                }
+                overall_status = "degraded"
         else:
             llm_status = {
                 "initialized": False,
                 "model_path": None,
                 "model_exists": False,
-                "error": "LLM runner not available"
+                "error": "LLM runner not available",
+                "message": "Backend started in degraded mode"
             }
-        
-        # Determine overall status
-        overall_status = "healthy"
-        if not llm_status.get("initialized", False):
             overall_status = "degraded"
+        
+        # System health overrides
         if system_info["memory_percent"] > 90:
             overall_status = "warning"
         if system_info["cpu_percent"] > 95:
@@ -82,7 +103,7 @@ async def health_check(
             timestamp=datetime.now().isoformat(),
             uptime=0,
             system_info={"error": str(e)},
-            llm_status={"error": str(e)}
+            llm_status={"error": str(e), "message": "Health check error"}
         )
 
 @router.get("/health/simple")

@@ -29,36 +29,102 @@ class LLMRunner:
         self.model_path = model_path
         self.llm: Optional[Llama] = None
         self.is_initialized = False
+        self.is_initializing = False
+        self.last_error: Optional[str] = None
         self.config = Config()
+        self.last_inference_time: Optional[datetime] = None
         
-    async def initialize(self):
-        """Initialize the LLM model"""
-        try:
-            logger.info(f"🔄 Initializing LLM from: {self.model_path}")
+    async def initialize(self, max_retries: int = 2):
+        """
+        Initialize the LLM model with retry logic
+        
+        Args:
+            max_retries: Maximum number of retry attempts
+        """
+        if self.is_initializing:
+            logger.warning("⚠️ Model initialization already in progress")
+            return
             
-            # Validate model path
-            if not os.path.exists(self.model_path):
-                raise FileNotFoundError(f"Model file not found: {self.model_path}")
-            
-            # Initialize llama.cpp - disable Metal for faster startup (can enable later)
-            logger.info("🔄 Creating Llama instance (this may take 30-60 seconds)...")
-            self.llm = Llama(
-                model_path=self.model_path,
-                n_ctx=self.config.MODEL_CONTEXT_SIZE,
-                n_threads=self.config.MODEL_N_THREADS,
-                verbose=False,
-                # Disable Metal acceleration to avoid long compilation on first run
-                # Can enable later with: n_gpu_layers=1 if os.uname().sysname == "Darwin" else 0,
-                n_gpu_layers=0,  # CPU only for now
-            )
-            logger.info("🔄 Llama instance created, verifying...")
-            
-            self.is_initialized = True
-            logger.info("✅ LLM initialized successfully")
-            
-        except Exception as e:
-            logger.error(f"❌ Failed to initialize LLM: {str(e)}")
-            raise
+        self.is_initializing = True
+        
+        for attempt in range(1, max_retries + 1):
+            try:
+                logger.info(f"🔄 Initializing LLM (attempt {attempt}/{max_retries})")
+                logger.info(f"   Model: {self.model_path}")
+                
+                # Validate model path
+                if not os.path.exists(self.model_path):
+                    raise FileNotFoundError(f"Model file not found: {self.model_path}")
+                
+                # Log memory before load
+                import psutil
+                mem_before = psutil.virtual_memory()
+                logger.info(f"   Memory before load: {mem_before.percent:.1f}% used ({mem_before.available / (1024**3):.1f} GB available)")
+                
+                # Check if we have enough memory (need at least 8GB free for Phi-3 Medium)
+                if mem_before.available < 6 * 1024**3:  # 6GB minimum
+                    logger.warning(f"⚠️ Low memory: {mem_before.available / (1024**3):.1f} GB available")
+                    logger.warning("⚠️ Phi-3 Medium requires ~8GB RAM. Model load may fail or be slow.")
+                
+                # Initialize llama.cpp
+                logger.info("🔄 Creating Llama instance (this may take 30-120 seconds for Phi-3 Medium)...")
+                load_start = datetime.now()
+                
+                self.llm = Llama(
+                    model_path=self.model_path,
+                    n_ctx=self.config.MODEL_CONTEXT_SIZE,
+                    n_threads=self.config.MODEL_N_THREADS,
+                    verbose=False,
+                    n_gpu_layers=0,  # CPU only for stability
+                )
+                
+                load_duration = (datetime.now() - load_start).total_seconds()
+                logger.info(f"🔄 Llama instance created in {load_duration:.1f}s, verifying...")
+                
+                # Log memory after load
+                mem_after = psutil.virtual_memory()
+                logger.info(f"   Memory after load: {mem_after.percent:.1f}% used ({mem_after.available / (1024**3):.1f} GB available)")
+                logger.info(f"   Memory delta: {(mem_before.available - mem_after.available) / (1024**3):.1f} GB")
+                
+                self.is_initialized = True
+                self.is_initializing = False
+                self.last_error = None
+                logger.info(f"✅ LLM initialized successfully in {load_duration:.1f}s")
+                return
+                
+            except MemoryError as e:
+                self.last_error = f"Out of memory: {str(e)}"
+                logger.error(f"❌ Memory error during initialization: {e}")
+                logger.error("⚠️ Insufficient RAM for Phi-3 Medium. Close other applications and try again.")
+                
+                if attempt < max_retries:
+                    logger.info(f"⏳ Retrying in 5 seconds... (attempt {attempt + 1}/{max_retries})")
+                    await asyncio.sleep(5)
+                else:
+                    logger.error("❌ Max retries reached. Starting in degraded mode (no LLM).")
+                    self.is_initializing = False
+                    return
+                    
+            except FileNotFoundError as e:
+                self.last_error = f"Model file not found: {str(e)}"
+                logger.error(f"❌ Model file error: {e}")
+                logger.error("⚠️ Run: cd backend && ./download_model.sh")
+                self.is_initializing = False
+                return
+                
+            except Exception as e:
+                self.last_error = str(e)
+                logger.error(f"❌ Failed to initialize LLM: {str(e)}")
+                
+                if attempt < max_retries:
+                    logger.info(f"⏳ Retrying in 5 seconds... (attempt {attempt + 1}/{max_retries})")
+                    await asyncio.sleep(5)
+                else:
+                    logger.error("❌ Max retries reached. Starting in degraded mode (no LLM).")
+                    self.is_initializing = False
+                    return
+        
+        self.is_initializing = False
     
     async def generate_response(
         self, 
@@ -112,6 +178,9 @@ class LLMRunner:
             # Extract text from response
             generated_text = response["choices"][0]["text"].strip()
             
+            # Update last inference time
+            self.last_inference_time = datetime.now()
+            
             result = {
                 "response": generated_text,
                 "metadata": {
@@ -147,8 +216,9 @@ class LLMRunner:
     
     def get_status(self) -> Dict[str, Any]:
         """Get current status of the LLM runner"""
-        return {
+        status = {
             "initialized": self.is_initialized,
+            "is_initializing": self.is_initializing,
             "model_path": self.model_path,
             "model_exists": os.path.exists(self.model_path) if self.model_path else False,
             "config": {
@@ -158,3 +228,13 @@ class LLMRunner:
                 "temperature": self.config.TEMPERATURE
             }
         }
+        
+        # Add error if exists
+        if self.last_error:
+            status["error"] = self.last_error
+            
+        # Add last inference time if available
+        if self.last_inference_time:
+            status["last_inference"] = self.last_inference_time.isoformat()
+            
+        return status

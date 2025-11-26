@@ -20,9 +20,17 @@ export interface GenerationResponse {
 }
 
 export interface SimpleHealthResponse {
-  status: "ok" | "healthy" | "warning" | "error" | string;
+  status: "ok" | "healthy" | "booting" | "degraded" | "warning" | "error" | string;
   message?: string;
   timestamp?: string;
+  llm_status?: {
+    initialized?: boolean;
+    is_initializing?: boolean;
+    model_path?: string;
+    model_exists?: boolean;
+    error?: string;
+    message?: string;
+  };
 }
 
 // ✅ Core helper for text generation (returns plain response text)
@@ -49,16 +57,68 @@ export async function sendMessage(prompt: string): Promise<string> {
   }
 }
 
-// ✅ Helper for health checks (returns structured status)
+/**
+ * Fetch with timeout support
+ */
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs: number = 20000): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  
+  try {
+    const response = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return response;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Request timeout');
+    }
+    throw error;
+  }
+}
+
+/**
+ * Helper for health checks with extended timeout for model loading
+ * Returns structured status
+ */
 export async function checkHealth(): Promise<SimpleHealthResponse> {
   try {
-    const res = await fetch(`${API_BASE}/api/health/simple`);
+    // Use extended timeout (20s) to handle slow model initialization
+    const res = await fetchWithTimeout(`${API_BASE}/api/health/simple`, {}, 20000);
+    
     if (!res.ok) {
       return { status: "error", message: `HTTP ${res.status}` };
     }
+    
     const data = (await res.json()) as SimpleHealthResponse;
     return data;
   } catch (error) {
-    return { status: "error", message: error instanceof Error ? error.message : "unknown error" };
+    const message = error instanceof Error ? error.message : "unknown error";
+    
+    // Don't log errors during expected boot/connection phases
+    if (!message.includes("timeout") && !message.includes("fetch")) {
+      console.debug("Backend health check failed:", message);
+    }
+    
+    return { status: "error", message };
+  }
+}
+
+/**
+ * Check detailed backend health (includes LLM status)
+ */
+export async function checkDetailedHealth(): Promise<any> {
+  try {
+    const res = await fetchWithTimeout(`${API_BASE}/api/health`, {}, 20000);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+    return await res.json();
+  } catch (error) {
+    console.debug("Detailed health check failed:", error);
+    throw error;
   }
 }

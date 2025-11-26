@@ -5,13 +5,24 @@
  * Privacy: All operations local, no network access
  */
 
-use std::{process::{Command, Stdio}, path::PathBuf, sync::Once, net::TcpStream, time::Duration};
+use std::{process::{Command, Stdio, Child}, path::PathBuf, sync::{Once, Mutex}, net::TcpStream, time::Duration};
 use std::io::{Read, Write};
 use tauri::{Manager, Window, WindowEvent};
 
 mod commands;
 
 static BACKEND_LAUNCH: Once = Once::new();
+static BACKEND_PROCESS: Mutex<Option<Child>> = Mutex::new(None);
+
+/// Detect if path is inside a cloud sync directory (OneDrive, iCloud, Google Drive)
+fn is_in_cloud_sync_dir(path: &PathBuf) -> bool {
+    let path_str = path.to_string_lossy().to_lowercase();
+    path_str.contains("onedrive") 
+        || path_str.contains("icloud") 
+        || path_str.contains("google drive")
+        || path_str.contains("dropbox")
+}
+
 fn resolve_backend_dir() -> PathBuf {
     // Prefer bundled locations first (macOS .app and Windows/Linux resources/)
     if let Ok(exe_path) = std::env::current_exe() {
@@ -39,6 +50,14 @@ fn resolve_backend_dir() -> PathBuf {
     for candidate in dev_candidates {
         if candidate.exists() {
             println!("✅ Using dev backend path {:?}", candidate);
+            
+            // Warn if in cloud sync directory
+            if is_in_cloud_sync_dir(&candidate) {
+                eprintln!("⚠️  WARNING: Backend is in a cloud sync directory!");
+                eprintln!("⚠️  This may cause file locking and spawn failures.");
+                eprintln!("⚠️  Recommended: Move project to local disk (e.g., ~/Developer/)");
+            }
+            
             return candidate;
         } else {
             println!("  ❌ Dev backend not found at {:?}", candidate);
@@ -66,38 +85,120 @@ fn launch_backend(_app: &tauri::App) {
             return;
         }
 
-        if let Err(e) = Command::new("python3")
+        // Check for venv python
+        let venv_python = backend_dir.join("venv/bin/python");
+        let python_cmd = if venv_python.exists() {
+            println!("✅ Found venv python at {:?}", venv_python);
+            venv_python.to_string_lossy().to_string()
+        } else {
+            println!("⚠️  venv/bin/python not found, falling back to system python3");
+            "python3".to_string()
+        };
+
+        println!("🚀 Spawning backend:");
+        println!("   Command: {}", python_cmd);
+        println!("   Args: main.py");
+        println!("   Working dir: {:?}", backend_dir);
+        println!("   This may take 30-120 seconds for Phi-3 to load...");
+
+        // Spawn with captured output for better diagnostics
+        let child_result = Command::new(&python_cmd)
             .arg("main.py")
             .current_dir(&backend_dir)
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn()
-        {
-            eprintln!("❌ Failed to launch backend from {:?}: {}", backend_dir, e);
-        } else {
-            println!("✅ Backend launched successfully from {:?}", backend_dir);
-            poll_backend_health();
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn();
+
+        match child_result {
+            Ok(child) => {
+                println!("✅ Backend process spawned (PID: {:?})", child.id());
+                
+                // Store process handle
+                if let Ok(mut guard) = BACKEND_PROCESS.lock() {
+                    *guard = Some(child);
+                }
+                
+                // Monitor backend health with extended timeout
+                poll_backend_health_robust();
+            }
+            Err(e) => {
+                eprintln!("❌ Failed to launch backend from {:?}: {}", backend_dir, e);
+                if is_in_cloud_sync_dir(&backend_dir) {
+                    eprintln!("⚠️  Failure may be due to OneDrive/cloud sync interference.");
+                    eprintln!("⚠️  Try running backend manually: cd backend && source venv/bin/activate && python main.py");
+                }
+            }
         }
     });
 }
 
-fn poll_backend_health() {
+fn poll_backend_health_robust() {
     std::thread::spawn(|| {
-        for _ in 0..10 {
-            if let Ok(mut stream) = TcpStream::connect("127.0.0.1:5005") {
-                let _ = stream.write_all(b"GET /api/health/simple HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n");
-                let mut buf = [0u8; 64];
-                if let Ok(read) = stream.read(&mut buf) {
-                    if read > 0 && buf.starts_with(b"HTTP/1.1 200") {
-                        println!("✅ Backend health confirmed");
+        let max_attempts = 360; // 3 minutes (360 * 500ms = 180s)
+        let mut consecutive_successes = 0;
+        
+        println!("🔍 Monitoring backend health (timeout: 180s)...");
+        
+        for attempt in 1..=max_attempts {
+            // Check if backend process crashed
+            if let Ok(mut guard) = BACKEND_PROCESS.lock() {
+                if let Some(ref mut child) = *guard {
+                    if let Ok(Some(status)) = child.try_wait() {
+                        eprintln!("❌ Backend process exited early with status: {:?}", status);
+                        eprintln!("⚠️  Check model file exists and llama-cpp-python is installed.");
                         return;
                     }
                 }
             }
+            
+            // Try health check
+            if let Ok(mut stream) = TcpStream::connect("127.0.0.1:5005") {
+                let _ = stream.write_all(b"GET /api/health/simple HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n");
+                let mut buf = [0u8; 256];
+                if let Ok(read) = stream.read(&mut buf) {
+                    if read > 0 && buf.starts_with(b"HTTP/1.1 200") {
+                        consecutive_successes += 1;
+                        if consecutive_successes >= 2 {
+                            println!("✅ Backend health confirmed (attempt {}/{})", attempt, max_attempts);
+                            return;
+                        }
+                    }
+                }
+            }
+            
+            // Progress indicator every 10 attempts (5 seconds)
+            if attempt % 10 == 0 {
+                println!("⏳ Still waiting for backend... ({}/{})", attempt, max_attempts);
+            }
+            
             std::thread::sleep(Duration::from_millis(500));
         }
-        println!("❌ Local backend failed to start. Check your model path and try again.");
+        
+        eprintln!("❌ Backend health check timeout after 180 seconds.");
+        eprintln!("⚠️  Phi-3 Medium may still be loading. Check terminal/logs.");
+        eprintln!("⚠️  Manual check: curl http://localhost:5005/api/health/simple");
     });
+}
+
+#[tauri::command]
+fn dev_reset_app() -> Result<(), String> {
+    use std::fs;
+    use std::io::ErrorKind;
+    use dirs::data_dir;
+
+    let dir = data_dir()
+        .ok_or_else(|| "Cannot resolve data directory".to_string())?
+        .join("ai.monad.offline");
+
+    match fs::remove_dir_all(&dir) {
+        Ok(_) => (),
+        Err(err) if err.kind() == ErrorKind::NotFound => (),
+        Err(err) => return Err(format!("Failed to remove data directory: {}", err)),
+    }
+
+    fs::create_dir_all(&dir).map_err(|err| format!("Failed to recreate data directory: {}", err))?;
+
+    Ok(())
 }
 
 fn main() {
@@ -204,6 +305,7 @@ fn main() {
         })
         // Register IPC commands (Tauri v2 syntax)
         .invoke_handler(tauri::generate_handler![
+            dev_reset_app,
             commands::ensure_chat_folder,
             commands::write_secure_file,
             commands::read_secure_file,

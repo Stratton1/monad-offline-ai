@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import * as THREE from "three";
 import { loadConfig } from "../lib/config";
 import { isBrowser } from "../lib/env";
+import { devResetApp } from "../lib/reset";
 
 export default function BootScreen({ onComplete }: { onComplete: () => void }) {
   console.log("[BootScreen] Component mounted");
@@ -248,7 +249,22 @@ export default function BootScreen({ onComplete }: { onComplete: () => void }) {
             {Math.min(progress, 100).toFixed(0)}% complete
           </motion.div>
         </motion.div>
-        
+
+        {import.meta.env.DEV && (
+          <button
+            type="button"
+            className="absolute bottom-4 left-4 px-3 py-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-500/20 hover:border-red-500/50 text-xs font-medium transition-all duration-200 backdrop-blur-sm shadow-lg hover:shadow-red-500/20"
+            onClick={() => {
+              console.log("[DevReset] Reset button clicked");
+              void devResetApp();
+            }}
+            title="Wipe all local data and restart (Dev Mode Only)"
+          >
+            🔄 Reset App
+            <span className="ml-1 text-red-500/60">(Dev)</span>
+          </button>
+        )}
+
         {/* Ambient particles */}
         <div className="absolute inset-0 pointer-events-none">
           {[...Array(20)].map((_, i) => (
